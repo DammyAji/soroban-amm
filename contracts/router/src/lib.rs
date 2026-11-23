@@ -2,7 +2,8 @@
 //!
 //! Routes swaps through one or more AMM pools discovered via the factory
 //! contract. A path is an ordered list of token addresses where each adjacent
-//! pair must have a deployed pool.
+//! pair must have a deployed pool. Paths are limited to `MAX_PATH_LEN` tokens
+//! (eight, to keep multi-hop calls within the transaction instruction budget).
 
 #![no_std]
 
@@ -14,6 +15,9 @@ use pool_interfaces::{AmmPoolClient, FactoryClient};
 
 const MIN_TTL: u32 = 172_800;
 const BUMP_TO: u32 = 518_400;
+
+/// Maximum number of token addresses accepted in one router path.
+pub const MAX_PATH_LEN: u32 = 8;
 
 // ── Typed errors ─────────────────────────────────────────────────────────────
 
@@ -52,6 +56,8 @@ pub enum RouterError {
     InvalidFactory = 11,
     /// `accept_admin` was called without a pending nomination.
     NoPendingAdmin = 12,
+    /// The path contains more than [`MAX_PATH_LEN`] tokens.
+    PathTooLong = 13,
 }
 
 #[contracttype]
@@ -117,6 +123,9 @@ impl Router {
     }
 
     /// Execute a multi-hop swap along `path`.
+    /// Execute an exact-input route.
+    ///
+    /// `path` may contain at most [`MAX_PATH_LEN`] token addresses.
     pub fn swap_exact_in(
         env: Env,
         trader: Address,
@@ -173,6 +182,9 @@ impl Router {
         Ok(current_amount)
     }
 
+    /// Execute an exact-output route.
+    ///
+    /// `path` may contain at most [`MAX_PATH_LEN`] token addresses.
     pub fn swap_exact_out(
         env: Env,
         trader: Address,
@@ -505,6 +517,9 @@ impl Router {
     /// previously surfaced as a confusing factory panic; it is rejected here
     /// with a named message instead.
     fn require_valid_path(path: &Vec<Address>) -> Result<(), RouterError> {
+        if path.len() > MAX_PATH_LEN {
+            return Err(RouterError::PathTooLong);
+        }
         if path.len() < 2 {
             return Err(RouterError::InvalidPath);
         }
@@ -970,6 +985,117 @@ mod tests {
         let path = soroban_sdk::vec![&s.env, s.token1.clone()];
         let result = router.try_get_amounts_in_path(&path, &10_000);
         assert_eq!(result, Err(Ok(RouterError::InvalidPath)));
+    }
+
+    fn overlong_path(env: &Env) -> soroban_sdk::Vec<Address> {
+        let mut path = soroban_sdk::Vec::new(env);
+        for i in 0..(MAX_PATH_LEN + 1) {
+            let _ = i;
+            path.push_back(Address::generate(env));
+        }
+        path
+    }
+
+    #[test]
+    fn test_overlong_path_is_rejected_by_every_entrypoint() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = overlong_path(&s.env);
+
+        assert_eq!(
+            router.try_swap_exact_in(&s.trader, &path, &10_000, &1, &u64::MAX),
+            Err(Ok(RouterError::PathTooLong))
+        );
+        assert_eq!(
+            router.try_swap_exact_out(&s.trader, &path, &10_000, &i128::MAX, &u64::MAX),
+            Err(Ok(RouterError::PathTooLong))
+        );
+        assert_eq!(
+            router.try_get_amount_out_path(&path, &10_000),
+            Err(Ok(RouterError::PathTooLong))
+        );
+        assert_eq!(
+            router.try_get_amount_in_path(&path, &10_000),
+            Err(Ok(RouterError::PathTooLong))
+        );
+        assert_eq!(
+            router.try_get_amounts_out_path(&path, &10_000),
+            Err(Ok(RouterError::PathTooLong))
+        );
+        assert_eq!(
+            router.try_get_amounts_in_path(&path, &10_000),
+            Err(Ok(RouterError::PathTooLong))
+        );
+        assert_eq!(
+            router.try_get_pools_for_path(&path),
+            Err(Ok(RouterError::PathTooLong))
+        );
+    }
+
+    #[test]
+    fn test_exact_max_path_len_is_not_rejected_as_too_long() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        let mut path = soroban_sdk::Vec::new(&s.env);
+        for i in 0..MAX_PATH_LEN {
+            let _ = i;
+            path.push_back(Address::generate(&s.env));
+        }
+
+        assert_ne!(
+            router.try_get_pools_for_path(&path),
+            Err(Ok(RouterError::PathTooLong))
+        );
+    }
+
+    #[test]
+    fn test_overlong_swap_exact_in() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = overlong_path(&s.env);
+        assert_eq!(
+            router.try_swap_exact_in(&s.trader, &path, &10_000, &1, &u64::MAX),
+            Err(Ok(RouterError::PathTooLong))
+        );
+    }
+
+    #[test]
+    fn test_overlong_swap_exact_out() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = overlong_path(&s.env);
+        assert_eq!(
+            router.try_swap_exact_out(&s.trader, &path, &10_000, &i128::MAX, &u64::MAX),
+            Err(Ok(RouterError::PathTooLong))
+        );
+    }
+
+    #[test]
+    fn test_overlong_scalar_quotes() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = overlong_path(&s.env);
+        assert_eq!(router.try_get_amount_out_path(&path, &10_000), Err(Ok(RouterError::PathTooLong)));
+        assert_eq!(router.try_get_amount_in_path(&path, &10_000), Err(Ok(RouterError::PathTooLong)));
+    }
+
+    #[test]
+    fn test_overlong_breakdown_quotes() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = overlong_path(&s.env);
+        assert_eq!(router.try_get_amounts_out_path(&path, &10_000), Err(Ok(RouterError::PathTooLong)));
+        assert_eq!(router.try_get_amounts_in_path(&path, &10_000), Err(Ok(RouterError::PathTooLong)));
+    }
+
+    #[test]
+    fn test_overlong_pool_resolution() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        assert_eq!(
+            router.try_get_pools_for_path(&overlong_path(&s.env)),
+            Err(Ok(RouterError::PathTooLong))
+        );
     }
 
     #[test]

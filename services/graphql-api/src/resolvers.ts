@@ -35,7 +35,18 @@ export const resolvers = {
       _: unknown,
       { poolId, limit }: { poolId?: string; limit?: number },
       context?: GraphQLContext,
-    ) => activeIndexer(context).getEvents(poolId, limit ?? 100),
+    ) => {
+      try {
+        return activeIndexer(context).getEvents(poolId, limit ?? 100);
+      } catch (error) {
+        if (error instanceof RangeError) {
+          throw new GraphQLError(error.message, {
+            extensions: { code: "BAD_USER_INPUT" },
+          });
+        }
+        throw error;
+      }
+    },
     positions: (_: unknown, { owner }: { owner?: string }, context?: GraphQLContext) =>
       activeIndexer(context).getPositions(owner),
     priceHistory: (

@@ -27424,6 +27424,39 @@
     "reserve_manager": [
       {
         "function_v0": {
+          "doc": "Replace the contract WASM. Governance-only; stored state is preserved.",
+          "inputs": [
+            {
+              "doc": "",
+              "name": "new_wasm_hash",
+              "type_": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          ],
+          "name": "upgrade",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "ReserveManagerError"
+                  }
+                },
+                "ok_type": {
+                  "tuple": {
+                    "value_types": []
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "function_v0": {
           "doc": "",
           "inputs": [],
           "name": "pause",
@@ -29546,6 +29579,11 @@
               "doc": "`accept_admin` was called without a pending nomination.",
               "name": "NoPendingAdmin",
               "value": 12
+            },
+            {
+              "doc": "The path contains more than [`MAX_PATH_LEN`] tokens.",
+              "name": "PathTooLong",
+              "value": 13
             }
           ],
           "doc": "Errors surfaced by the router.\\n\\nEvery caller-triggerable failure path returns one of these discriminants\\ninstead of trapping, so integrators can branch on the specific reason a\\nmulti-hop route failed. Discriminants 1 and 2 follow the workspace-wide\\nconvention (`AlreadyInitialized` / `NotInitialized`); see\\n`contracts/amm/src/lib.rs` `AmmError` for the reference enum.",

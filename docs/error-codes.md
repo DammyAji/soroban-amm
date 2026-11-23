@@ -110,6 +110,12 @@ Defined in [contracts/amm-sdk/src/types.rs](../contracts/amm-sdk/src/types.rs) a
 | 22 | `PoolDrained` | Pool entered terminal `Drained` state after emergency withdrawal (#1095). | Deploy a new pool; drained pools are permanently retired. |
 | 23 | `QuorumNotMet` | Multisig emergency withdrawal approvals are below `MultisigQuorum` (#1095). | Collect enough signer approvals before executing. |
 | 24 | `NoPendingProposal` | `exec_multisig_emergency_wd` called with no active multisig proposal (#1095). | Call `propose_emergency_withdraw` first. |
+| 25 | `QuorumNotReached` | Emergency withdrawal collected approvals are below the multisig quorum. | Collect enough signer approvals. |
+| 26 | `InvalidQuorum` | The quorum or signer set is invalid. | Reconfigure the multisig. |
+| 27 | `EmergencyDelayNotElapsed` | The emergency delay has not elapsed. | Wait until the delay expires. |
+| 28 | `InvalidRecipient` | The recipient is invalid or differs from the announcement. | Use the valid announced recipient. |
+| 29 | `MultisigGuardActive` | Multisig configuration was changed while a guard is active. | Complete or propose the required guarded transition. |
+| 30 | `InvalidEmergencyDelay` | The configured emergency delay exceeds the maximum. | Use a delay within the configured maximum. |
 
 ---
 
