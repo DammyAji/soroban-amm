@@ -496,6 +496,7 @@ Defined in [contracts/router/src/lib.rs](../contracts/router/src/lib.rs) as `Rou
 | 10 | `Unauthorized` | An admin-only operation used the wrong admin, or `accept_admin` was called by an address other than the nominee. | Pass the stored or nominated address and sign with its key. |
 | 11 | `InvalidFactory` | `initialize` could not call the factory's `get_pool_count` interface. | Pass a deployed factory contract address. |
 | 12 | `NoPendingAdmin` | `accept_admin` was called without a pending nomination. | Call `propose_admin` first. |
+| 13 | `PoolCallFailed` | A hop pool rejected a swap or quote call (e.g. paused, empty reserves, or another pool-level error). | Inspect the hop pools along the path (pause state, reserves, liquidity) before retrying. |
 
 ---
 

@@ -10,7 +10,7 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Vec,
 };
 
-use pool_interfaces::{AmmPoolClient, FactoryClient};
+use pool_interfaces::{AmmError, AmmPoolClient, FactoryClient};
 
 const MIN_TTL: u32 = 172_800;
 const BUMP_TO: u32 = 518_400;
@@ -52,6 +52,9 @@ pub enum RouterError {
     InvalidFactory = 11,
     /// `accept_admin` was called without a pending nomination.
     NoPendingAdmin = 12,
+    /// A hop pool rejected a swap or quote call (e.g. paused, empty reserves,
+    /// or another pool-level error).
+    PoolCallFailed = 13,
 }
 
 #[contracttype]
@@ -151,13 +154,13 @@ impl Router {
             // hop, so only that hop passes a non-zero minimum to the pool.
             let hop_min_out = if i + 1 == hops { min_amount_out } else { 0 };
 
-            current_amount = AmmPoolClient::new(&env, &pool).swap(
+            current_amount = Self::map_pool_result(AmmPoolClient::new(&env, &pool).try_swap(
                 &trader,
                 &token_in,
                 &current_amount,
                 &hop_min_out,
                 &deadline,
-            );
+            ))?;
         }
 
         if current_amount < min_amount_out {
@@ -212,13 +215,13 @@ impl Router {
 
             let expected_out = amounts_in.get(i + 1).unwrap();
 
-            let actual_out = AmmPoolClient::new(&env, &pool).swap(
+            let actual_out = Self::map_pool_result(AmmPoolClient::new(&env, &pool).try_swap(
                 &trader,
                 &token_in,
                 &current_amount_in,
                 &expected_out,
                 &deadline,
-            );
+            ))?;
 
             if actual_out < expected_out {
                 return Err(RouterError::SlippageExceeded);
@@ -266,8 +269,9 @@ impl Router {
                 None => return Ok(0),
             };
 
-            current_amount =
-                AmmPoolClient::new(&env, &pool).get_amount_out(&token_in, &current_amount);
+            current_amount = Self::map_pool_result(
+                AmmPoolClient::new(&env, &pool).try_get_amount_out(&token_in, &current_amount),
+            )?;
         }
 
         Ok(current_amount)
@@ -546,7 +550,9 @@ impl Router {
         for i in 0..hops {
             let token_in = path.get(i).unwrap();
             let pool = Self::pool_for_hop(factory, path, i)?;
-            current = AmmPoolClient::new(env, &pool).get_amount_out(&token_in, &current);
+            current = Self::map_pool_result(
+                AmmPoolClient::new(env, &pool).try_get_amount_out(&token_in, &current),
+            )?;
             amounts.push_back(current);
         }
         Ok(amounts)
@@ -571,12 +577,29 @@ impl Router {
         for i in (0..hops).rev() {
             let token_out = path.get(i + 1).unwrap();
             let pool = Self::pool_for_hop(factory, path, i)?;
-            let required_in =
-                AmmPoolClient::new(env, &pool).get_amount_in(&token_out, &current_out);
+            let required_in = Self::map_pool_result(
+                AmmPoolClient::new(env, &pool).try_get_amount_in(&token_out, &current_out),
+            )?;
             amounts.push_front(required_in);
             current_out = required_in;
         }
         Ok(amounts)
+    }
+
+    /// Convert a `try_*` `AmmPoolClient` result into a typed `RouterError`.
+    ///
+    /// Maps pool-level `SlippageExceeded` and `DeadlineExceeded` to their
+    /// matching `RouterError` variants, and all other pool rejections or
+    /// cross-contract call failures to `RouterError::PoolCallFailed`.
+    fn map_pool_result<T, C, I>(
+        res: Result<Result<T, C>, Result<AmmError, I>>,
+    ) -> Result<T, RouterError> {
+        match res {
+            Ok(Ok(val)) => Ok(val),
+            Err(Ok(AmmError::SlippageExceeded)) => Err(RouterError::SlippageExceeded),
+            Err(Ok(AmmError::DeadlineExceeded)) => Err(RouterError::DeadlineExceeded),
+            _ => Err(RouterError::PoolCallFailed),
+        }
     }
 }
 
@@ -1410,5 +1433,141 @@ mod tests {
     #[test]
     fn test_ttl_bump_is_paused() {
         assert_view_ttl_bump(6);
+    }
+
+    // ── Typed propagation of hop-pool failures ────────────────────────────────
+
+    #[test]
+    fn test_paused_mid_route_pool_returns_typed_error() {
+        let s = setup_three_hop();
+        let factory = FactoryClient::new(&s.env, &s.factory);
+        let pool2 = factory.get_pool(&s.token2, &s.token3).unwrap();
+        amm::AmmPoolClient::new(&s.env, &pool2).pause();
+
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = soroban_sdk::vec![&s.env, s.token1.clone(), s.token2.clone(), s.token3.clone()];
+
+        let res_in = router.try_swap_exact_in(&s.trader, &path, &10_000, &0, &u64::MAX);
+        assert_eq!(res_in, Err(Ok(RouterError::PoolCallFailed)));
+
+        let res_out = router.try_swap_exact_out(&s.trader, &path, &1_000, &100_000, &u64::MAX);
+        assert_eq!(res_out, Err(Ok(RouterError::PoolCallFailed)));
+    }
+
+    #[test]
+    fn test_empty_pool_returns_typed_error() {
+        let s = setup_three_hop();
+        let empty_token = s
+            .env
+            .register_stellar_asset_contract_v2(s.admin.clone())
+            .address();
+        let factory = FactoryClient::new(&s.env, &s.factory);
+        // Create pool without adding any liquidity so reserves are zero.
+        factory.create_pool(&s.admin, &s.token2, &empty_token, &2_i128, &None);
+
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = soroban_sdk::vec![&s.env, s.token1.clone(), s.token2.clone(), empty_token];
+
+        let res_in = router.try_swap_exact_in(&s.trader, &path, &10_000, &0, &u64::MAX);
+        assert_eq!(res_in, Err(Ok(RouterError::PoolCallFailed)));
+    }
+
+    #[test]
+    fn test_quote_views_on_empty_pool_return_typed_error() {
+        let s = setup_three_hop();
+        let empty_token = s
+            .env
+            .register_stellar_asset_contract_v2(s.admin.clone())
+            .address();
+        let factory = FactoryClient::new(&s.env, &s.factory);
+        factory.create_pool(&s.admin, &s.token2, &empty_token, &2_i128, &None);
+
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = soroban_sdk::vec![&s.env, s.token1.clone(), s.token2.clone(), empty_token];
+
+        assert_eq!(
+            router.try_get_amount_out_path(&path, &10_000),
+            Err(Ok(RouterError::PoolCallFailed))
+        );
+        assert_eq!(
+            router.try_get_amounts_out_path(&path, &10_000),
+            Err(Ok(RouterError::PoolCallFailed))
+        );
+        assert_eq!(
+            router.try_get_amount_in_path(&path, &1_000),
+            Err(Ok(RouterError::PoolCallFailed))
+        );
+        assert_eq!(
+            router.try_get_amounts_in_path(&path, &1_000),
+            Err(Ok(RouterError::PoolCallFailed))
+        );
+    }
+
+    #[test]
+    fn test_pool_slippage_maps_to_typed_slippage_exceeded() {
+        let s = setup_three_hop();
+        let router = RouterClient::new(&s.env, &s.router);
+        let path = soroban_sdk::vec![&s.env, s.token1.clone(), s.token2.clone(), s.token3.clone()];
+
+        let res = router.try_swap_exact_in(&s.trader, &path, &10_000, &1_000_000_000, &u64::MAX);
+        assert_eq!(res, Err(Ok(RouterError::SlippageExceeded)));
+    }
+
+    #[contract]
+    struct DeadlineFailingPool;
+
+    #[contractimpl]
+    impl DeadlineFailingPool {
+        pub fn swap(
+            _env: Env,
+            _trader: Address,
+            _token_in: Address,
+            _amount_in: i128,
+            _min_out: i128,
+            _deadline: u64,
+        ) -> Result<i128, AmmError> {
+            Err(AmmError::DeadlineExceeded)
+        }
+    }
+
+    #[contract]
+    struct StubFactory;
+
+    #[contractimpl]
+    impl StubFactory {
+        pub fn set_pool(env: Env, pool: Address) {
+            env.storage().instance().set(&symbol_short!("pool"), &pool);
+        }
+
+        pub fn get_pool_count(_env: Env) -> u64 {
+            1
+        }
+
+        pub fn get_pool(env: Env, _token_a: Address, _token_b: Address) -> Option<Address> {
+            env.storage().instance().get(&symbol_short!("pool"))
+        }
+    }
+
+    #[test]
+    fn test_hop_deadline_exceeded_maps_to_typed_error() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let trader = Address::generate(&env);
+        let token_a = Address::generate(&env);
+        let token_b = Address::generate(&env);
+
+        let pool_addr = env.register_contract(None, DeadlineFailingPool);
+        let factory_addr = env.register_contract(None, StubFactory);
+        StubFactoryClient::new(&env, &factory_addr).set_pool(&pool_addr);
+
+        let router_addr = env.register_contract(None, Router);
+        let router = RouterClient::new(&env, &router_addr);
+        router.initialize(&admin, &factory_addr);
+
+        let path = soroban_sdk::vec![&env, token_a, token_b];
+        let res = router.try_swap_exact_in(&trader, &path, &1_000, &0, &u64::MAX);
+        assert_eq!(res, Err(Ok(RouterError::DeadlineExceeded)));
     }
 }
