@@ -86,6 +86,7 @@ export interface HealthAlert {
 export interface AlertConfig {
   poolId: string;
   metric: string;
+  comparison?: "above" | "below";
   thresholdBps?: number;
   thresholdValue?: number;
 }

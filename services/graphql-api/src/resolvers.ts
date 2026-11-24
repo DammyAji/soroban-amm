@@ -6,6 +6,7 @@ import { GraphQLError } from "graphql";
 import { PubSub } from "graphql-subscriptions";
 import {
   defaultIndexer,
+  InvalidComparisonError,
   InvalidMetricError,
   InvalidThresholdError,
   type AlertConfig,
@@ -71,11 +72,13 @@ export const resolvers = {
       {
         poolId,
         metric,
+        comparison,
         thresholdBps,
         thresholdValue,
       }: {
         poolId: string;
         metric: string;
+        comparison?: string;
         thresholdBps?: number;
         thresholdValue?: number;
       },
@@ -85,6 +88,7 @@ export const resolvers = {
         const config = activeIndexer(context).setAlertConfig({
           poolId,
           metric: metric as AlertMetric,
+          comparison: comparison as "above" | "below" | undefined,
           thresholdBps,
           thresholdValue,
         });
@@ -92,7 +96,8 @@ export const resolvers = {
           ? context.store.setAlertConfig(config).then(() => config)
           : config;
       } catch (error) {
-        if (error instanceof InvalidMetricError || error instanceof InvalidThresholdError) {
+        if (error instanceof InvalidMetricError || error instanceof InvalidThresholdError ||
+            error instanceof InvalidComparisonError) {
           throw new GraphQLError(error.message, {
             extensions: { code: "BAD_USER_INPUT" },
           });

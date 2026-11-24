@@ -32,6 +32,7 @@ export type AlertMetric = (typeof VALID_ALERT_METRICS)[number];
 export interface AlertConfig {
   poolId: string;
   metric: AlertMetric;
+  comparison?: "above" | "below";
   thresholdBps?: number;
   thresholdValue?: number;
 }
@@ -75,8 +76,19 @@ export class InvalidThresholdError extends Error {
   }
 }
 
+export class InvalidComparisonError extends Error {
+  constructor(comparison: string) {
+    super(`Invalid alert comparison "${comparison}". Must be "above" or "below"`);
+    this.name = "InvalidComparisonError";
+  }
+}
+
 function isValidMetric(metric: string): metric is AlertMetric {
   return (VALID_ALERT_METRICS as readonly string[]).includes(metric);
+}
+
+function isValidComparison(comparison: string): comparison is "above" | "below" {
+  return comparison === "above" || comparison === "below";
 }
 
 function toStr(value: unknown): string {
@@ -274,6 +286,8 @@ export class PoolIndexer {
 
   setAlertConfig(config: AlertConfig): AlertConfig {
     if (!isValidMetric(config.metric)) throw new InvalidMetricError(config.metric);
+    const comparison = config.comparison ?? "above";
+    if (!isValidComparison(comparison)) throw new InvalidComparisonError(comparison);
     const threshold = config.metric === "price_deviation" ? config.thresholdBps : config.thresholdValue;
     if (threshold === undefined || !Number.isFinite(threshold)) {
       throw new InvalidThresholdError(config.metric === "price_deviation"
@@ -281,8 +295,9 @@ export class PoolIndexer {
         : `thresholdValue is required for metric "${config.metric}"`);
     }
     if (threshold < 0) throw new InvalidThresholdError("Threshold must be >= 0");
-    this.alertConfigs.set(`${config.poolId}:${config.metric}`, config);
-    return config;
+    const normalized = { ...config, comparison };
+    this.alertConfigs.set(`${config.poolId}:${config.metric}`, normalized);
+    return normalized;
   }
 
   removeAlertConfig(poolId: string, metric: string): boolean {
@@ -364,7 +379,9 @@ export class PoolIndexer {
       const currentValue = config.metric === "price_deviation" ? stats.priceDeviationBps
         : config.metric === "tvl" ? stats.tvl : stats.volume24h;
       const threshold = config.metric === "price_deviation" ? config.thresholdBps! : config.thresholdValue!;
-      if (currentValue !== null && currentValue > threshold) {
+      const crossed = config.comparison === "below" ? currentValue !== null && currentValue < threshold
+        : currentValue !== null && currentValue > threshold;
+      if (crossed) {
         const alert = { poolId, metric: config.metric, threshold, currentValue, firedAt: this.clock() };
         fired.push(alert);
         this.firedAlerts.push(alert);
