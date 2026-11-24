@@ -53,11 +53,11 @@ check-doc-commands: build ## Verify documented contract invokes against built WA
 test-doc-commands: ## Run fixture tests for the documentation command checker
 	node --test scripts/check_doc_commands.test.mjs
 
-test: build ## Build, then run the full workspace test suite
-	cargo test --workspace
+test: build ## Build, then run the full workspace test suite (matches CI's "Run all tests" step)
+	cargo test --workspace --exclude amm_fuzz
 
-test-all: ## Run tests for the whole workspace
-	cargo test --workspace
+test-all: ## Run tests for the whole workspace (matches CI's "Run all tests" step)
+	cargo test --workspace --exclude amm_fuzz
 
 fuzz-amm: ## Build AMM WASM and run the deployed stateful invariant suite (CI case count)
 	cargo build --release --target wasm32v1-none -p amm -p token

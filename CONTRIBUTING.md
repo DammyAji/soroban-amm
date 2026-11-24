@@ -133,8 +133,8 @@ Common tasks are wrapped in the `Makefile`:
 make help       # list every target with a one-line description (default goal)
 make build      # cargo build --release --target wasm32v1-none
 make optimize   # optimize every WASM artifact from `make build` via the Stellar CLI
-make test       # build, then run the workspace test suite
-make test-all   # run tests for the whole workspace
+make test       # build, then run the workspace test suite (excludes amm_fuzz, matches CI)
+make test-all   # run workspace tests excluding amm_fuzz (matches CI)
 make fmt        # cargo fmt --all
 make lint       # cargo clippy --all -- -D warnings
 make check-docs # verify docs/error-codes.md matches #[contracterror] enums
@@ -240,7 +240,7 @@ these artifacts.
 Run the full suite:
 
 ```bash
-make test          # or: cargo test --workspace
+make test          # or: cargo test --workspace --exclude amm_fuzz
 ```
 
 Run a single crate's tests:
