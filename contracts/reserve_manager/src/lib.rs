@@ -546,13 +546,7 @@ impl ReserveManager {
     pub fn get_min_reserve(env: Env, token_a: Address, token_b: Address) -> ReserveRequirement {
         Self::extend_instance_ttl(&env);
         let (ta, tb) = Self::normalize(token_a, token_b);
-        env.storage()
-            .persistent()
-            .get(&DataKey::MinReserve(ta, tb))
-            .unwrap_or(ReserveRequirement {
-                min_reserve_a: 0,
-                min_reserve_b: 0,
-            })
+        Self::read_min_reserve(&env, &ta, &tb)
     }
 
     // ── Compliance checks ─────────────────────────────────────────────────────
@@ -589,14 +583,7 @@ impl ReserveManager {
         };
 
         let (ta, tb) = Self::normalize(token_a.clone(), token_b.clone());
-        let req: ReserveRequirement = env
-            .storage()
-            .persistent()
-            .get(&DataKey::MinReserve(ta.clone(), tb))
-            .unwrap_or(ReserveRequirement {
-                min_reserve_a: 0,
-                min_reserve_b: 0,
-            });
+        let req = Self::read_min_reserve(&env, &ta, &tb);
 
         // The requirement is stored against the normalized pair, so align the
         // observed reserves with that same ordering before comparing.
@@ -803,6 +790,24 @@ impl ReserveManager {
         }
     }
 
+    /// Read a per-pair minimum reserve requirement and, when present, extend its
+    /// persistent TTL so a configured floor stays alive on read.
+    fn read_min_reserve(env: &Env, ta: &Address, tb: &Address) -> ReserveRequirement {
+        let key = DataKey::MinReserve(ta.clone(), tb.clone());
+        let req = env.storage().persistent().get(&key);
+        if let Some(req) = req {
+            env.storage()
+                .persistent()
+                .extend_ttl(&key, MIN_PERSISTENT_TTL, PERSISTENT_TTL_BUMP_TO);
+            req
+        } else {
+            ReserveRequirement {
+                min_reserve_a: 0,
+                min_reserve_b: 0,
+            }
+        }
+    }
+
     /// Build a report from a resolved `(token_a, token_b, reserve_a, reserve_b)`
     /// tuple, expressed in the pool's own token order.
     fn build_report(
@@ -818,14 +823,7 @@ impl ReserveManager {
             (token_b.clone(), token_a.clone())
         };
 
-        let req: ReserveRequirement = env
-            .storage()
-            .persistent()
-            .get(&DataKey::MinReserve(ta, tb))
-            .unwrap_or(ReserveRequirement {
-                min_reserve_a: 0,
-                min_reserve_b: 0,
-            });
+        let req = Self::read_min_reserve(env, &ta, &tb);
 
         // Requirements are stored under the normalised pair; map them back onto
         // the pool's own token order so `min_a` always describes `token_a`.
@@ -2103,5 +2101,55 @@ mod tests {
         assert_eq!(report.min_b, 500_000);
         assert_eq!(report.shortfall_a, 400_000);
         assert_eq!(report.shortfall_b, 400_000);
+    }
+
+    #[test]
+    fn test_get_min_reserve_and_check_reserves_extend_ttl() {
+        let s = setup();
+        let rm = ReserveManagerClient::new(&s.env, &s.rm_addr);
+
+        rm.set_min_reserve(&s.ta, &s.tb, &2_000_000_i128, &2_000_000_i128);
+        assert!(!rm.check_reserves(&s.pool));
+
+        s.env.ledger().with_mut(|l| {
+            l.sequence_number += super::PERSISTENT_TTL_BUMP_TO + 1;
+        });
+
+        let req = rm.get_min_reserve(&s.ta, &s.tb);
+        assert_eq!(req.min_reserve_a, 2_000_000);
+        assert_eq!(req.min_reserve_b, 2_000_000);
+        assert!(!rm.check_reserves(&s.pool));
+    }
+
+    #[test]
+    fn test_check_reserves_detailed_and_batch_extend_ttl() {
+        let s = setup();
+        let rm = ReserveManagerClient::new(&s.env, &s.rm_addr);
+
+        rm.set_min_reserve(&s.ta, &s.tb, &2_000_000_i128, &2_000_000_i128);
+
+        s.env.ledger().with_mut(|l| {
+            l.sequence_number += super::PERSISTENT_TTL_BUMP_TO + 1;
+        });
+
+        let detailed = rm.check_reserves_detailed(&s.pool);
+        assert!(!detailed.healthy);
+        assert_eq!(detailed.min_a, 2_000_000);
+        assert_eq!(detailed.min_b, 2_000_000);
+        assert_eq!(detailed.shortfall_a, 1_000_000);
+        assert_eq!(detailed.shortfall_b, 1_000_000);
+
+        s.env.ledger().with_mut(|l| {
+            l.sequence_number += super::PERSISTENT_TTL_BUMP_TO + 1;
+        });
+
+        let pools = soroban_sdk::vec![&s.env, s.pool.clone()];
+        let reports = rm.check_reserves_batch(&pools);
+        let report = reports.get(0).unwrap();
+        assert!(!report.healthy);
+        assert_eq!(report.min_a, 2_000_000);
+        assert_eq!(report.min_b, 2_000_000);
+        assert_eq!(report.shortfall_a, 1_000_000);
+        assert_eq!(report.shortfall_b, 1_000_000);
     }
 }
