@@ -23,6 +23,7 @@ jobs:
                   bash scripts/check_batch_router_deploy.test.sh
                   bash scripts/e2e/common.test.sh
                   bash scripts/e2e/flows.test.sh
+                  bash scripts/e2e/run.test.sh
             - name: Check release manifest
               run: make check-release-manifest
             - name: Setup Node
