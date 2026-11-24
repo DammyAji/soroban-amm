@@ -27,6 +27,8 @@ export type PoolEventType =
   | "remove_liquidity"
   | "mint_pos"
   | "burn_pos"
+  | "mod_pos"
+  | "mint_1t"
   | "coll_fees"
   | "governance"
   | "staking"

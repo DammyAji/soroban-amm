@@ -242,6 +242,57 @@ describe("analytics correctness", () => {
     assert.equal(positions.find((position) => position.owner === "bob")?.lowerTick, -10);
   });
 
+  it("indexes mint_1t liquidity for the owner's tick range", () => {
+    const idx = makeIndexer();
+    idx.indexEvent({
+      id: "single-token-mint", poolId: "p1", type: "mint_1t", timestamp: NOW,
+      payload: {
+        owner: "alice", lowerTick: -10, upperTick: 10, liquidity: 15, amountUsed: 20, dust: 2,
+      },
+    });
+
+    const position = idx.getPositions("alice")[0];
+    assert.equal(position.shares, 15);
+    assert.equal(position.lowerTick, -10);
+    assert.equal(position.upperTick, 10);
+  });
+
+  it("applies positive mod_pos liquidity and reserve deltas", () => {
+    const idx = makeIndexer();
+    idx.indexEvent({
+      id: "modify-increase", poolId: "p1", type: "mod_pos", timestamp: NOW,
+      payload: {
+        owner: "alice", lowerTick: -10, upperTick: 10,
+        liquidityDelta: 25, amountA: 4, amountB: 8,
+      },
+    });
+
+    assert.equal(idx.getPositions("alice")[0].shares, 25);
+    assert.equal(idx.getPoolStats("p1")[0].reserveA, 4);
+    assert.equal(idx.getPoolStats("p1")[0].reserveB, 8);
+  });
+
+  it("applies negative mod_pos liquidity and reserve deltas", () => {
+    const idx = makeIndexer();
+    idx.indexEvent({
+      id: "position-mint", poolId: "p1", type: "mint_pos", timestamp: NOW,
+      payload: {
+        owner: "alice", lowerTick: -10, upperTick: 10, liquidity: 100, amountA: 10, amountB: 20,
+      },
+    });
+    idx.indexEvent({
+      id: "modify-decrease", poolId: "p1", type: "mod_pos", timestamp: NOW,
+      payload: {
+        owner: "alice", lowerTick: -10, upperTick: 10,
+        liquidityDelta: -30, amountA: 3, amountB: 6,
+      },
+    });
+
+    assert.equal(idx.getPositions("alice")[0].shares, 70);
+    assert.equal(idx.getPoolStats("p1")[0].reserveA, 7);
+    assert.equal(idx.getPoolStats("p1")[0].reserveB, 14);
+  });
+
   it("surfaces when the pool fee came from the explicit default", () => {
     const idx = new PoolIndexer(() => NOW, { p1: { tokenA: "XLM", tokenB: "USDC" } });
     idx.indexEvent(swapEvent({ id: "fee", poolId: "p1" }));
