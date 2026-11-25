@@ -226,6 +226,7 @@ pub trait PositionNftInterface {
     fn burn(env: Env, token_id: u64);
     fn owner_of(env: Env, token_id: u64) -> Address;
     fn cl_pool(env: Env) -> Address;
+    fn total_supply(env: Env) -> u64;
 }
 
 #[contracttype]
@@ -450,6 +451,8 @@ impl ConcentratedLiquidity {
     ///
     /// The NFT contract must be initialized with this pool's address as its
     /// `cl_pool`, otherwise mint/burn calls from the pool will be rejected.
+    /// Detaching or replacing the contract is blocked while tokenized positions
+    /// remain open.
     pub fn set_position_nft(env: Env, admin: Address, nft: Option<Address>) -> Result<(), ClError> {
         Self::extend_instance_ttl(&env);
         let stored = Self::read_admin(&env)?;
@@ -458,19 +461,26 @@ impl ConcentratedLiquidity {
         }
         admin.require_auth();
 
-        // Safety check: prevent changing NFT contract when positions are tokenized.
-        // Changing the contract would orphan existing token_id → position indices,
-        // causing resolve_token_owner/ensure_legacy_owner to query the wrong NFT
-        // and either trap (id doesn't exist) or authorize the wrong owner (id collision).
+        // Changing or detaching the NFT contract would orphan the token_id indexes.
         let existing_nft: Option<Address> = env
             .storage()
             .instance()
             .get(&DataKey::PositionNft)
             .unwrap_or(None);
+        let tokenized_positions_remain = if nft.is_none() {
+            existing_nft.as_ref().map_or(false, |nft_addr| {
+                !matches!(
+                    PositionNftClient::new(&env, nft_addr).try_total_supply(),
+                    Ok(Ok(0))
+                )
+            })
+        } else {
+            false
+        };
 
-        // Only allow changing from Some → None (detach) or None → Some (initial set).
-        // Changing from Some(A) → Some(B) is forbidden.
-        if existing_nft.is_some() && nft.is_some() && existing_nft != nft {
+        if existing_nft.is_some()
+            && ((nft.is_some() && existing_nft != nft) || tokenized_positions_remain)
+        {
             return Err(ClError::NftContractChangeBlocked);
         }
 
@@ -8450,6 +8460,8 @@ mod test_single_token_deposit {
     struct NftFixture<'a> {
         client: ConcentratedLiquidityClient<'a>,
         nft: ClPositionNftClient<'a>,
+        nft_addr: Address,
+        admin: Address,
         token_a: Address,
         token_b: Address,
         alice: Address,
@@ -8502,6 +8514,8 @@ mod test_single_token_deposit {
         NftFixture {
             client,
             nft,
+            nft_addr,
+            admin,
             token_a,
             token_b,
             alice,
@@ -9192,6 +9206,38 @@ mod test_single_token_deposit {
     }
 
     #[test]
+    fn cannot_detach_nft_contract_while_positions_tokenized() {
+        let env = Env::default();
+        let f = setup_with_nft(&env);
+
+        assert_eq!(
+            f.client.try_set_position_nft(&f.admin, &None),
+            Err(Ok(ClError::NftContractChangeBlocked))
+        );
+        assert_eq!(f.client.position_nft(), Some(f.nft_addr.clone()));
+        assert_eq!(f.nft.owner_of(&0_u64), f.alice);
+    }
+
+    #[test]
+    fn can_detach_nft_contract_after_tokenized_positions_are_burned() {
+        let env = Env::default();
+        let f = setup_with_nft(&env);
+        f.client
+            .burn_position_by_token_id(&f.alice, &0_u64, &f.liquidity);
+
+        assert!(f.nft.try_owner_of(&0_u64).is_err());
+        assert_eq!(f.client.position_of_token(&0_u64), None);
+        assert_eq!(
+            f.client
+                .position_token_id(&f.alice, &f.lower, &f.upper),
+            None
+        );
+
+        f.client.set_position_nft(&f.admin, &None);
+        assert_eq!(f.client.position_nft(), None);
+    }
+
+    #[test]
     fn cannot_change_nft_contract_after_positions_tokenized() {
         // Regression test for vulnerability: changing DataKey::PositionNft to a
         // different contract after positions have been minted would orphan the
@@ -9244,10 +9290,6 @@ mod test_single_token_deposit {
             .unwrap()
             .unwrap();
         assert_eq!(err, ClError::NftContractChangeBlocked);
-
-        // Changing to None (detach) should still be allowed.
-        client.set_position_nft(&admin, &None);
-        assert_eq!(client.position_nft(), None);
 
         // Re-attaching the same contract is allowed.
         client.set_position_nft(&admin, &Some(nft_v1.clone()));
