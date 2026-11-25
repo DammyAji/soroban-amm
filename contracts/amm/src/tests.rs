@@ -2677,6 +2677,48 @@ fn test_force_unlock_requires_multisig_quorum_when_configured() {
     assert!(!amm.is_locked());
 }
 
+#[test]
+fn test_force_unlock_counts_only_distinct_multisig_signers() {
+    let ts = setup_pool(30);
+    let env = &ts.env;
+    let amm = AmmPoolClient::new(env, &ts.amm_addr);
+    let signer_a = Address::generate(env);
+    let signer_b = Address::generate(env);
+    let signer_c = Address::generate(env);
+    amm.set_multisig(
+        &ts.admin,
+        &soroban_sdk::vec![env, signer_a.clone(), signer_b.clone(), signer_c.clone()],
+        &3u32,
+    );
+
+    env.as_contract(&ts.amm_addr, || {
+        env.storage().instance().set(&DataKey::Locked, &true);
+    });
+
+    assert_eq!(
+        amm.try_force_unlock(&soroban_sdk::vec![
+            env,
+            signer_a.clone(),
+            signer_a.clone(),
+            signer_a.clone()
+        ]),
+        Err(Ok(AmmError::Unauthorized))
+    );
+    assert_eq!(
+        amm.try_force_unlock(&soroban_sdk::vec![
+            env,
+            signer_a.clone(),
+            signer_a.clone(),
+            signer_b.clone()
+        ]),
+        Err(Ok(AmmError::Unauthorized))
+    );
+    assert!(amm.is_locked());
+
+    amm.force_unlock(&soroban_sdk::vec![env, signer_a, signer_b, signer_c]);
+    assert!(!amm.is_locked());
+}
+
 // ── Issue: multisig proposal expiry must not be refreshed by an already-approved signer ──
 //
 // `propose_emergency_withdraw` previously reset `MultisigProposalExpiresAt` to
