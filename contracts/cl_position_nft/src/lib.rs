@@ -180,17 +180,28 @@ impl ClPositionNft {
     pub const MAX_POSITIONS_PER_OWNER: u64 = 10_000;
 
     /// Number of positions `owner` holds in the O(1) index. `O(1)`.
+    ///
+    /// Renews `OwnerTokenCount` on every read so it cannot expire while
+    /// `OwnerTokenByIndex` slots are still live (index slots are renewed by
+    /// `tokens_of_paginated`/`token_of_owner_by_index`; without this bump
+    /// the counter could lapse independently, causing the next mint to treat
+    /// a stale `0` as the free-slot index and overwrite slot 0).
     fn owner_token_count(env: &Env, owner: &Address) -> u64 {
-        env.storage()
-            .persistent()
-            .get(&DataKey::OwnerTokenCount(owner.clone()))
-            .unwrap_or(0)
+        let key = DataKey::OwnerTokenCount(owner.clone());
+        let count: u64 = env.storage().persistent().get(&key).unwrap_or(0);
+        if count > 0 {
+            Self::bump_persistent(env, &key);
+        }
+        count
     }
 
     fn has_index_slot(env: &Env, token_id: u64) -> bool {
-        env.storage()
-            .persistent()
-            .has(&DataKey::TokenIndexOfOwner(token_id))
+        let key = DataKey::TokenIndexOfOwner(token_id);
+        let exists = env.storage().persistent().has(&key);
+        if exists {
+            Self::bump_persistent(env, &key);
+        }
+        exists
     }
 
     /// Adds `token_id` to `owner`'s O(1) index at the next free slot. `O(1)`:
@@ -2274,6 +2285,114 @@ mod tests {
         for (&id, &owner_idx) in &live {
             assert_eq!(client.owner_of(&id), owners[owner_idx]);
         }
+    }
+
+    // ── TTL divergence regression (#ownership-index-ttl) ─────────────────────
+    //
+    // `OwnerTokenCount` and the `OwnerTokenByIndex` slots were bumped at
+    // different times: `tokens_of_paginated` renewed individual slots but
+    // did not renew the counter. If the counter expired (read back as `0`)
+    // while slot 0 was still live, the next mint would call `index_add` with
+    // `count = 0`, write `OwnerTokenByIndex(owner, 0) = new_id`, and silently
+    // overwrite the token that was already in slot 0.
+    //
+    // The fix renews `OwnerTokenCount` inside `owner_token_count` (which every
+    // read and write path already calls) and renews `TokenIndexOfOwner` inside
+    // `has_index_slot` (called by `burn` / `transfer` to choose the O(1) vs.
+    // legacy path).
+    #[test]
+    fn ownership_index_counter_ttl_divergence_does_not_overwrite_slot_0() {
+        use soroban_sdk::testutils::Ledger as _;
+
+        // Use small TTL windows so the test can drive counter expiry without
+        // advancing billions of ledgers.
+        let env = Env::default();
+        env.mock_all_auths();
+        env.ledger().with_mut(|li| {
+            li.sequence_number = 1_000;
+            // A generous max_entry_ttl; the test drives expiry via bump
+            // parameters, not this cap.
+            li.max_entry_ttl = 10_000_000;
+        });
+
+        let contract_id = env.register_contract(None, ClPositionNft);
+        let client = ClPositionNftClient::new(&env, &contract_id);
+        let admin = Address::generate(&env);
+        let pool = Address::generate(&env);
+        let owner = Address::generate(&env);
+        client.initialize(&admin, &pool);
+
+        // Use a very small bump window so we can drive expiry cheaply.
+        // bump_to = 200, min_ttl_threshold = 100.
+        client.set_ttl_params(&100, &200);
+
+        // Mint two positions → slots 0 and 1.
+        let id0 = client.mint(&owner, &pool, &-1, &1);
+        let id1 = client.mint(&owner, &pool, &-2, &2);
+        assert_eq!(client.balance_of(&owner), 2);
+
+        // Advance ledger by bump_to - min_ttl_threshold + 1 so entries that
+        // were bumped at mint time are now below the renewal threshold but
+        // still live (TTL > 0).  tokens_of will renew the two
+        // OwnerTokenByIndex slots; without the fix it does NOT renew the
+        // OwnerTokenCount key.
+        env.ledger()
+            .with_mut(|li| li.sequence_number += 200 - 100 + 1);
+
+        // This call renews the two index slots but (on main, pre-fix) leaves
+        // OwnerTokenCount un-renewed.
+        let page = client.tokens_of(&owner);
+        assert_eq!(page.len(), 2);
+
+        // Now advance far enough that OwnerTokenCount would expire if it had
+        // not been renewed by the fix, while the two OwnerTokenByIndex slots
+        // — which tokens_of just renewed — remain live.
+        //
+        // State after first advance + tokens_of call:
+        //   - On main (no fix): counter's last bump was at mint time
+        //     (TTL ~99 remaining); slots were just bumped to TTL 200 by tokens_of.
+        //   - With fix: counter was also bumped to TTL 200 by tokens_of.
+        //
+        // Advancing 150 more:
+        //   - Counter on main: TTL 99 - 150 < 0 → evicted (reads as 0).
+        //   - Counter with fix: TTL 200 - 150 = 50 → still live.
+        //   - Slots (both paths): TTL 200 - 150 = 50 → still live.
+        env.ledger().with_mut(|li| li.sequence_number += 150);
+
+        // Mint a third position.  If OwnerTokenCount was not renewed it reads
+        // as 0 and index_add writes to slot 0, overwriting id0.
+        let id2 = client.mint(&owner, &pool, &-3, &3);
+
+        // The balance must reflect all three live positions.
+        assert_eq!(client.balance_of(&owner), 3, "balance_of must be 3 after minting a third position");
+
+        // Every slot below balance_of must resolve to a unique id — slot 0
+        // must NOT have been overwritten with id2.
+        let count = client.balance_of(&owner);
+        let mut seen: std::collections::BTreeSet<u64> = std::collections::BTreeSet::new();
+        for i in 0..count {
+            let id = client
+                .token_of_owner_by_index(&owner, &i)
+                .unwrap_or_else(|| panic!("slot {i} below balance_of must resolve"));
+            assert!(
+                seen.insert(id),
+                "token {id} appears in more than one index slot (slot {i} overwritten)"
+            );
+        }
+
+        // All three minted ids must be reachable.
+        assert!(
+            seen.contains(&id0),
+            "id0={id0} not found in index after third mint"
+        );
+        assert!(
+            seen.contains(&id1),
+            "id1={id1} not found in index after third mint"
+        );
+        assert!(
+            seen.contains(&id2),
+            "id2={id2} not found in index after third mint"
+        );
     }
 
     // ── Issue #915: every event carries EVENT_SCHEMA_VERSION ────────────────
