@@ -25,6 +25,12 @@ const TICK_BASE_NUM: i128 = 1_000_100;
 const TICK_BASE_DEN: i128 = PRICE_SCALE;
 const MIN_TICK: i32 = -887_272;
 const MAX_TICK: i32 = 887_272;
+const MIN_BITMAP_WORD_POS: i32 = -6_932;
+const MAX_BITMAP_WORD_POS: i32 = 6_931;
+const BITMAP_WORD_COUNT: i32 = MAX_BITMAP_WORD_POS - MIN_BITMAP_WORD_POS + 1;
+const BITMAP_INDEX_PAGE_BITS: i32 = 128;
+const BITMAP_INDEX_PAGE_COUNT: i32 =
+    (BITMAP_WORD_COUNT + BITMAP_INDEX_PAGE_BITS - 1) / BITMAP_INDEX_PAGE_BITS;
 /// Fixed-point scale of the fee-growth accumulators (Q64 wide scale, issue #1098).
 pub const FEE_GROWTH_SCALE: i128 = 1_i128 << 64;
 
@@ -178,6 +184,13 @@ pub enum DataKey {
     /// Lets the legacy address-keyed entry points detect a tokenized position
     /// and defer control to the current NFT owner.
     PositionNftToken(Address, i32, i32),
+    /// Bitmap-word positions present in each fixed 128-word page.
+    TickBitmapIndexPage(i32),
+    /// Presence bitmap for non-empty `TickBitmapIndexPage` entries.
+    TickBitmapIndexRoot,
+    /// Set after the legacy `TickBitmapWords` index has been migrated.
+    TickBitmapIndexMigrated,
+    /// Legacy sorted word-position index, read once when upgrading existing pools.
     TickBitmapWords,
     /// Persistent ring-buffer slot `0..cardinality` holding an [`OracleObservation`] (#1101).
     OracleObservation(u32),
@@ -405,9 +418,8 @@ impl ConcentratedLiquidity {
             .instance()
             .set(&DataKey::MaxOracleDeviationBps, &500_i128);
         env.storage()
-            .persistent()
-            .set(&DataKey::TickBitmapWords, &Vec::<i32>::new(&env));
-        Self::bump_position(&env, &DataKey::TickBitmapWords);
+            .instance()
+            .set(&DataKey::TickBitmapIndexMigrated, &true);
         soroban_amm_sdk::emit_versioned_event!(
             env,
             (Symbol::new(&env, "initialized"),),
@@ -4098,59 +4110,139 @@ impl ConcentratedLiquidity {
         }
     }
 
-    fn add_bitmap_word_index(env: &Env, word_pos: i32) {
-        let mut words: Vec<i32> = env
+    fn ensure_bitmap_index_migrated(env: &Env) {
+        if env
+            .storage()
+            .instance()
+            .get::<_, bool>(&DataKey::TickBitmapIndexMigrated)
+            .unwrap_or(false)
+        {
+            return;
+        }
+
+        let legacy_words: Option<Vec<i32>> = env
             .storage()
             .persistent()
             .get(&DataKey::TickBitmapWords)
-            .unwrap_or_else(|| Vec::new(env));
-        let mut low = 0u32;
-        let mut high = words.len();
-        while low < high {
-            let mid = low + (high - low) / 2;
-            let val = words.get(mid).unwrap();
-            if val == word_pos {
-                return;
-            } else if val < word_pos {
-                low = mid + 1;
-            } else {
-                high = mid;
+            .or_else(|| {
+                env.storage()
+                    .instance()
+                    .get(&DataKey::TickBitmapWords)
+            });
+        if let Some(words) = legacy_words {
+            for word_pos in words.iter() {
+                Self::update_bitmap_word_index(env, word_pos, true);
             }
         }
-        words.insert(low, word_pos);
+
         env.storage()
             .persistent()
-            .set(&DataKey::TickBitmapWords, &words);
-        Self::bump_position(env, &DataKey::TickBitmapWords);
+            .remove(&DataKey::TickBitmapWords);
+        env.storage().instance().remove(&DataKey::TickBitmapWords);
+        env.storage()
+            .instance()
+            .set(&DataKey::TickBitmapIndexMigrated, &true);
+    }
+
+    fn bitmap_word_offset(word_pos: i32) -> Option<i32> {
+        if !(MIN_BITMAP_WORD_POS..=MAX_BITMAP_WORD_POS).contains(&word_pos) {
+            return None;
+        }
+        let offset = word_pos - MIN_BITMAP_WORD_POS;
+        Some(offset)
+    }
+
+    fn read_bitmap_index_page(env: &Env, page: i32) -> u128 {
+        let key = DataKey::TickBitmapIndexPage(page);
+        if let Some(bits) = env.storage().persistent().get(&key) {
+            Self::bump_position(env, &key);
+            bits
+        } else {
+            0
+        }
+    }
+
+    fn read_bitmap_index_root(env: &Env) -> u128 {
+        let key = DataKey::TickBitmapIndexRoot;
+        if let Some(bits) = env.storage().persistent().get(&key) {
+            Self::bump_position(env, &key);
+            bits
+        } else {
+            let mut bits = 0_u128;
+            for page in 0..BITMAP_INDEX_PAGE_COUNT {
+                if Self::read_bitmap_index_page(env, page) != 0 {
+                    bits |= 1_u128 << page;
+                }
+            }
+            Self::write_bitmap_index_root(env, bits);
+            bits
+        }
+    }
+
+    fn write_bitmap_index_page(env: &Env, page: i32, bits: u128) {
+        let key = DataKey::TickBitmapIndexPage(page);
+        if bits == 0 {
+            env.storage().persistent().remove(&key);
+            env.storage().instance().remove(&key);
+        } else {
+            env.storage().persistent().set(&key, &bits);
+            Self::bump_position(env, &key);
+            env.storage().instance().remove(&key);
+        }
+    }
+
+    fn write_bitmap_index_root(env: &Env, bits: u128) {
+        let key = DataKey::TickBitmapIndexRoot;
+        if bits == 0 {
+            env.storage().persistent().remove(&key);
+            env.storage().instance().remove(&key);
+        } else {
+            env.storage().persistent().set(&key, &bits);
+            Self::bump_position(env, &key);
+            env.storage().instance().remove(&key);
+        }
+    }
+
+    fn update_bitmap_word_index(env: &Env, word_pos: i32, present: bool) {
+        let Some(offset) = Self::bitmap_word_offset(word_pos) else {
+            return;
+        };
+        let page = offset / BITMAP_INDEX_PAGE_BITS;
+        if page >= BITMAP_INDEX_PAGE_COUNT {
+            return;
+        }
+        let bit = 1u128 << (offset % BITMAP_INDEX_PAGE_BITS);
+        let page_before = Self::read_bitmap_index_page(env, page);
+        let page_after = if present {
+            page_before | bit
+        } else {
+            page_before & !bit
+        };
+        if page_before == page_after {
+            return;
+        }
+
+        let root_before = Self::read_bitmap_index_root(env);
+        Self::write_bitmap_index_page(env, page, page_after);
+        if page_before == 0 || page_after == 0 {
+            let root_bit = 1u128 << page;
+            let root_after = if page_after == 0 {
+                root_before & !root_bit
+            } else {
+                root_before | root_bit
+            };
+            Self::write_bitmap_index_root(env, root_after);
+        }
+    }
+
+    fn add_bitmap_word_index(env: &Env, word_pos: i32) {
+        Self::ensure_bitmap_index_migrated(env);
+        Self::update_bitmap_word_index(env, word_pos, true);
     }
 
     fn remove_bitmap_word_index(env: &Env, word_pos: i32) {
-        let mut words: Vec<i32> = match env.storage().persistent().get(&DataKey::TickBitmapWords) {
-            Some(w) => w,
-            None => return,
-        };
-        let mut low = 0u32;
-        let mut high = words.len();
-        let mut found = None;
-        while low < high {
-            let mid = low + (high - low) / 2;
-            let val = words.get(mid).unwrap();
-            if val == word_pos {
-                found = Some(mid);
-                break;
-            } else if val < word_pos {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
-        }
-        if let Some(idx) = found {
-            words.remove(idx);
-            env.storage()
-                .persistent()
-                .set(&DataKey::TickBitmapWords, &words);
-            Self::bump_position(env, &DataKey::TickBitmapWords);
-        }
+        Self::ensure_bitmap_index_migrated(env);
+        Self::update_bitmap_word_index(env, word_pos, false);
     }
 
     fn flip_tick(env: &Env, tick: i32) {
@@ -4162,10 +4254,7 @@ impl ConcentratedLiquidity {
     }
 
     fn next_initialized_tick(env: &Env, tick: i32, zero_for_one: bool) -> Option<i32> {
-        let words_opt: Option<Vec<i32>> = env.storage().persistent().get(&DataKey::TickBitmapWords);
-        if words_opt.is_some() {
-            Self::bump_position(env, &DataKey::TickBitmapWords);
-        }
+        Self::ensure_bitmap_index_migrated(env);
 
         if zero_for_one {
             let word_pos = tick.div_euclid(128);
@@ -4182,26 +4271,11 @@ impl ConcentratedLiquidity {
                 return Some(word_pos * 128 + bit as i32);
             }
 
-            // O(1)-O(log N) jump using indexed words in persistent storage
-            if let Some(ref words) = words_opt {
-                let mut low = 0u32;
-                let mut high = words.len();
-                while low < high {
-                    let mid = low + (high - low) / 2;
-                    let val = words.get(mid).unwrap();
-                    if val < word_pos {
-                        low = mid + 1;
-                    } else {
-                        high = mid;
-                    }
-                }
-                if low > 0 {
-                    let next_word_pos = words.get(low - 1).unwrap();
-                    let next_word = Self::get_bitmap_word(env, next_word_pos);
-                    if next_word != 0 {
-                        let bit = 127 - next_word.leading_zeros();
-                        return Some(next_word_pos * 128 + bit as i32);
-                    }
+            if let Some(next_word_pos) = Self::next_bitmap_word_index(env, word_pos, true) {
+                let next_word = Self::get_bitmap_word(env, next_word_pos);
+                if next_word != 0 {
+                    let bit = 127 - next_word.leading_zeros();
+                    return Some(next_word_pos * 128 + bit as i32);
                 }
             }
             None
@@ -4217,29 +4291,76 @@ impl ConcentratedLiquidity {
                 return Some(word_pos * 128 + bit as i32);
             }
 
-            if let Some(ref words) = words_opt {
-                let mut low = 0u32;
-                let mut high = words.len();
-                while low < high {
-                    let mid = low + (high - low) / 2;
-                    let val = words.get(mid).unwrap();
-                    if val <= word_pos {
-                        low = mid + 1;
-                    } else {
-                        high = mid;
-                    }
-                }
-                if low < words.len() {
-                    let next_word_pos = words.get(low).unwrap();
-                    let next_word = Self::get_bitmap_word(env, next_word_pos);
-                    if next_word != 0 {
-                        let bit = next_word.trailing_zeros();
-                        return Some(next_word_pos * 128 + bit as i32);
-                    }
+            if let Some(next_word_pos) = Self::next_bitmap_word_index(env, word_pos, false) {
+                let next_word = Self::get_bitmap_word(env, next_word_pos);
+                if next_word != 0 {
+                    let bit = next_word.trailing_zeros();
+                    return Some(next_word_pos * 128 + bit as i32);
                 }
             }
             None
         }
+    }
+
+    fn next_bitmap_word_index(env: &Env, word_pos: i32, previous: bool) -> Option<i32> {
+        let offset = Self::bitmap_word_offset(word_pos)?;
+        let page = offset / BITMAP_INDEX_PAGE_BITS;
+        let bit_pos = offset % BITMAP_INDEX_PAGE_BITS;
+
+        let page_bits = Self::read_bitmap_index_page(env, page);
+        let page_mask = if previous {
+            if bit_pos == 0 {
+                0
+            } else {
+                (1u128 << bit_pos) - 1
+            }
+        } else if bit_pos == 127 {
+            0
+        } else {
+            u128::MAX.wrapping_shl((bit_pos + 1) as u32)
+        };
+        let matching_words = page_bits & page_mask;
+        if matching_words != 0 {
+            let bit = if previous {
+                127 - matching_words.leading_zeros()
+            } else {
+                matching_words.trailing_zeros()
+            };
+            return Some(MIN_BITMAP_WORD_POS + page * BITMAP_INDEX_PAGE_BITS + bit as i32);
+        }
+
+        let root_bits = Self::read_bitmap_index_root(env);
+        let page_mask = if previous {
+            if page == 0 {
+                0
+            } else {
+                (1u128 << page) - 1
+            }
+        } else if page == 127 {
+            0
+        } else {
+            u128::MAX.wrapping_shl((page + 1) as u32)
+        };
+        let matching_pages = root_bits & page_mask;
+        if matching_pages == 0 {
+            return None;
+        }
+
+        let matched_page = if previous {
+            (127 - matching_pages.leading_zeros()) as i32
+        } else {
+            matching_pages.trailing_zeros() as i32
+        };
+        let page_bits = Self::read_bitmap_index_page(env, matched_page);
+        if page_bits == 0 {
+            return None;
+        }
+        let bit = if previous {
+            127 - page_bits.leading_zeros()
+        } else {
+            page_bits.trailing_zeros()
+        };
+        Some(MIN_BITMAP_WORD_POS + matched_page * BITMAP_INDEX_PAGE_BITS + bit as i32)
     }
 
     fn get_tick(env: &Env, tick: i32) -> TickInfo {
