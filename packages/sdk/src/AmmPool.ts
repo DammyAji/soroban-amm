@@ -20,7 +20,6 @@ import {
 import type {
   AddLiquidityParams,
   NetworkConfig,
-  Signer,
   PoolInfo,
   RemoveLiquidityParams,
   SwapParams,

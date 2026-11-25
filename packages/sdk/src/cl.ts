@@ -182,6 +182,17 @@ export class ConcentratedLiquidityClient {
    * Direction is liquidity → token amounts. The contract does not expose the
    * reverse (amounts → liquidity) quote.
    */
+  /**
+   * Parameters for `quote_position`.
+   *
+   * @param lowerTick  - Lower tick boundary (i32).
+   * @param upperTick  - Upper tick boundary (i32).
+   * @param liquidity  - Liquidity amount (i128).
+   */
+  quotePositionParams(lowerTick: number, upperTick: number, liquidity: bigint): xdr.ScVal[] {
+    return [i32(lowerTick), i32(upperTick), i128(liquidity)];
+  }
+
   async quotePosition(
     lowerTick: number,
     upperTick: number,
