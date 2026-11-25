@@ -745,6 +745,9 @@ count. Events marked unversioned carry their payload without the
 |---|---|---|---|
 | `pause` | 1 | `admin` | v1 |
 | `unpause` | 1 | `admin` | v1 |
+| `admin_nominated` | 1 | `current_admin`, `new_admin` | v1 |
+| `admin_changed` | 1 | `new_admin` | v1 |
+| `upgraded` | 1 | `new_wasm_hash` | v1 |
 | `cl_reg` | 1 | `token_a`, `token_b`, `fee_bps`, `pool` | v1 |
 | `route_sel` | 1 | `venue`, `venue_kind`, `amount_in`, `amount_out` | v1 |
 | `route_alt` | 1 | `venue`, `amount_out`, `alt_venue`, `alt_venue_kind`, `alt_amount_out` | v1 |
