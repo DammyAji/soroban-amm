@@ -10,18 +10,17 @@
 use amm::{AmmPool, AmmPoolClient};
 use soroban_amm_sdk::events::{
     decode_amm_event, AddLiquidityEvent, AdminChangedEvent, AdminNominatedEvent, AmmEvent,
-    CircuitBreakerConfigEvent, EmergencyAnnounceEvent, EmergencyCancelEvent,
-    EmergencyWithdrawEvent, FeeUpdatedEvent, FlashFeeUpdatedEvent, FlashLoanEvent,
-    ForceUnlockEvent, FotDetectedEvent, LpLockerSetEvent, LpRebateSetEvent,
-    MultisigApprovedEvent, MultisigEmergencyWithdrawEvent, MultisigProposedEvent,
-    MultisigSetEvent, MultisigSetProposedEvent, ProtocolFeeSetEvent, RemoveLiquidityEvent,
+    CircuitBreakerConfigEvent, EmergencyAnnounceEvent, EmergencyCancelEvent, FeeUpdatedEvent,
+    FlashFeeUpdatedEvent, FlashLoanEvent, ForceUnlockEvent, FotDetectedEvent, LpLockerSetEvent,
+    LpRebateSetEvent, MultisigApprovedEvent, MultisigProposedEvent, MultisigSetEvent,
+    MultisigSetProposedEvent, ProtocolFeeSetEvent, RemoveLiquidityEvent,
     RemoveLiquidityOneSidedEvent, SwapEvent,
 };
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short,
     testutils::{Address as _, Events, Ledger},
     token::{StellarAssetClient, TokenClient},
-    Address, Bytes, Env, IntoVal, String, Symbol,
+    Address, Bytes, Env, String, Symbol, TryFromVal,
 };
 use token::{LpToken, LpTokenClient};
 
@@ -101,10 +100,19 @@ fn setup_with_emergency_delay(delay_secs: Option<u64>) -> Setup {
     let amm = AmmPoolClient::new(&env, &pool);
     if let Some(delay_secs) = delay_secs {
         amm.initialize_with_emergency_delay(
-            &admin, &token_a, &token_b, &lp_token, &30_i128, &admin, &0_i128, &delay_secs,
+            &admin,
+            &token_a,
+            &token_b,
+            &lp_token,
+            &30_i128,
+            &admin,
+            &0_i128,
+            &delay_secs,
         );
     } else {
-        amm.initialize(&admin, &token_a, &token_b, &lp_token, &30_i128, &admin, &0_i128);
+        amm.initialize(
+            &admin, &token_a, &token_b, &lp_token, &30_i128, &admin, &0_i128,
+        );
     }
 
     Setup {
@@ -178,13 +186,17 @@ impl Setup {
     }
 
     fn pool_event(&self, event_type: &str) -> AmmEvent {
-        let expected = Symbol::new(&self.env, event_type).into_val(&self.env);
+        let expected = Symbol::new(&self.env, event_type);
         let events = self.env.events().all();
         let (_, topics, data) = events
             .iter()
             .rev()
             .find(|(contract, topics, _)| {
-                *contract == self.pool && topics.get(0) == Some(expected.clone())
+                *contract == self.pool
+                    && topics
+                        .get(0)
+                        .and_then(|topic| Symbol::try_from_val(&self.env, &topic).ok())
+                        == Some(expected.clone())
             })
             .expect("pool did not publish the requested event");
         decode_amm_event(&self.env, topics, data).expect("pool event did not decode")
@@ -695,13 +707,7 @@ fn decodes_fee_on_transfer_detection() {
     StellarAssetClient::new(&env, &token_b).mint(&provider, &SEED);
     let amm = AmmPoolClient::new(&env, &pool);
     amm.add_liquidity_fot(
-        &provider,
-        &SEED,
-        &SEED,
-        &0_i128,
-        &0_i128,
-        &0_i128,
-        &DEADLINE,
+        &provider, &SEED, &SEED, &0_i128, &0_i128, &0_i128, &DEADLINE,
     );
     amm.swap_fot(
         &provider,

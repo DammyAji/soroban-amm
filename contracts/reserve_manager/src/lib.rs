@@ -1033,15 +1033,17 @@ mod tests {
         let invoke = MockAuthInvoke {
             contract: contract_id,
             fn_name,
-            args: &args,
+            args: args.clone(),
             sub_invokes: &[],
         };
-        let auth_error =
-            soroban_sdk::Error::from_type_and_code(ScErrorType::Context, ScErrorCode::InvalidAction);
+        let auth_error = soroban_sdk::Error::from_type_and_code(
+            ScErrorType::Context,
+            ScErrorCode::InvalidAction,
+        );
 
         env.set_auths(&[]);
         assert_eq!(
-            env.try_invoke_contract::<Val, soroban_sdk::Error>(
+            env.try_invoke_contract::<(), soroban_sdk::Error>(
                 contract_id,
                 &Symbol::new(env, fn_name),
                 args.clone(),
@@ -1056,7 +1058,7 @@ mod tests {
             invoke: &invoke,
         }]);
         assert_eq!(
-            env.try_invoke_contract::<Val, soroban_sdk::Error>(
+            env.try_invoke_contract::<(), soroban_sdk::Error>(
                 contract_id,
                 &Symbol::new(env, fn_name),
                 args.clone(),
@@ -1070,7 +1072,7 @@ mod tests {
             invoke: &invoke,
         }]);
         assert!(
-            env.try_invoke_contract::<Val, soroban_sdk::Error>(
+            env.try_invoke_contract::<(), soroban_sdk::Error>(
                 contract_id,
                 &Symbol::new(env, fn_name),
                 args,
@@ -1138,7 +1140,7 @@ mod tests {
             &s.rm_addr,
             &nominee,
             "accept_governance",
-            (nominee,),
+            (nominee.clone(),),
         );
     }
 
@@ -1147,7 +1149,13 @@ mod tests {
         let s = setup();
         let nominee = Address::generate(&s.env);
         ReserveManagerClient::new(&s.env, &s.rm_addr).propose_admin(&s.governance, &nominee);
-        assert_requires_auth(&s.env, &s.rm_addr, &nominee, "accept_admin", (nominee,));
+        assert_requires_auth(
+            &s.env,
+            &s.rm_addr,
+            &nominee,
+            "accept_admin",
+            (nominee.clone(),),
+        );
     }
 
     #[test]

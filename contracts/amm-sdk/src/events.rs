@@ -962,7 +962,10 @@ pub fn decode_amm_event(
         }))
     } else if symbol == Symbol::new(env, symbols::EMERGENCY_CANCEL) {
         let (admin, to): (Address, Address) = decode_payload(env, payload_val, 2)?;
-        Some(AmmEvent::EmergencyCancel(EmergencyCancelEvent { admin, to }))
+        Some(AmmEvent::EmergencyCancel(EmergencyCancelEvent {
+            admin,
+            to,
+        }))
     } else if symbol == Symbol::new(env, symbols::EMERGENCY_WITHDRAW) {
         let (admin, to, drain_a, drain_b): (Address, Address, i128, i128) =
             decode_payload(env, payload_val, 4)?;

@@ -965,15 +965,17 @@ mod tests {
         let invoke = MockAuthInvoke {
             contract: contract_id,
             fn_name,
-            args: &args,
+            args: args.clone(),
             sub_invokes: &[],
         };
-        let auth_error =
-            soroban_sdk::Error::from_type_and_code(ScErrorType::Context, ScErrorCode::InvalidAction);
+        let auth_error = soroban_sdk::Error::from_type_and_code(
+            ScErrorType::Context,
+            ScErrorCode::InvalidAction,
+        );
 
         env.set_auths(&[]);
         assert_eq!(
-            env.try_invoke_contract::<Val, soroban_sdk::Error>(
+            env.try_invoke_contract::<(), soroban_sdk::Error>(
                 contract_id,
                 &Symbol::new(env, fn_name),
                 args.clone(),
@@ -988,7 +990,7 @@ mod tests {
             invoke: &invoke,
         }]);
         assert_eq!(
-            env.try_invoke_contract::<Val, soroban_sdk::Error>(
+            env.try_invoke_contract::<(), soroban_sdk::Error>(
                 contract_id,
                 &Symbol::new(env, fn_name),
                 args.clone(),
@@ -1002,7 +1004,7 @@ mod tests {
             invoke: &invoke,
         }]);
         assert!(
-            env.try_invoke_contract::<Val, soroban_sdk::Error>(
+            env.try_invoke_contract::<(), soroban_sdk::Error>(
                 contract_id,
                 &Symbol::new(env, fn_name),
                 args,
@@ -1113,7 +1115,7 @@ mod tests {
             &s.contract_id,
             &nominee,
             "accept_governance",
-            (nominee,),
+            (nominee.clone(),),
         );
     }
 
@@ -1150,7 +1152,7 @@ mod tests {
             &s.contract_id,
             &nominee,
             "accept_treasury",
-            (nominee,),
+            (nominee.clone(),),
         );
     }
 
@@ -1214,12 +1216,7 @@ mod tests {
         let stranger = Address::generate(&s.env);
         s.env.mock_all_auths();
         let err = PolVestingContractClient::new(&s.env, &s.contract_id)
-            .try_change_beneficiary(
-                &stranger,
-                &s.beneficiary,
-                &schedule_id,
-                &new_beneficiary,
-            )
+            .try_change_beneficiary(&stranger, &s.beneficiary, &schedule_id, &new_beneficiary)
             .unwrap_err()
             .unwrap();
         assert_eq!(err, VestingError::NotGovernance, "change_beneficiary");
@@ -1234,11 +1231,7 @@ mod tests {
             &s.contract_id,
             &s.governance,
             "revoke_vesting",
-            (
-                s.governance.clone(),
-                s.beneficiary.clone(),
-                schedule_id,
-            ),
+            (s.governance.clone(), s.beneficiary.clone(), schedule_id),
         );
 
         let stranger = Address::generate(&s.env);
