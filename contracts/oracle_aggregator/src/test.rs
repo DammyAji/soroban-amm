@@ -996,6 +996,15 @@ fn get_price_persists_last_successful_source_timestamp() {
         &OracleSourceType::External,
         &10_000,
     );
+    // The production policy needs two agreeing sources for a successful quote.
+    let supporting_source = deploy_fixed_source(&env, 100, 900);
+    h.aggregator.register_source(
+        &h.admin,
+        &pair(&h),
+        &supporting_source,
+        &OracleSourceType::External,
+        &10_000,
+    );
     set_now(&env, 1_000);
 
     assert_eq!(
@@ -1026,6 +1035,15 @@ fn preview_price_reads_do_not_persist_source_timestamps() {
         &h.admin,
         &pair(&h),
         &source,
+        &OracleSourceType::External,
+        &10_000,
+    );
+    // The production policy needs two agreeing sources for a successful quote.
+    let supporting_source = deploy_fixed_source(&env, 100, 900);
+    h.aggregator.register_source(
+        &h.admin,
+        &pair(&h),
+        &supporting_source,
         &OracleSourceType::External,
         &10_000,
     );
