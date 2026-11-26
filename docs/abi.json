@@ -3103,6 +3103,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -3285,6 +3380,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -3386,6 +3500,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -3424,6 +3586,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -3449,6 +3712,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -5254,6 +5546,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -5436,6 +5823,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -5537,6 +5943,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -5575,6 +6029,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -5600,6 +6155,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       },
       {
@@ -7407,6 +7991,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -7589,6 +8268,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -7690,6 +8388,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -7728,6 +8474,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -7753,6 +8600,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       },
       {
@@ -9699,6 +10575,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -9881,6 +10852,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -9982,6 +10972,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -10020,6 +11058,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -10045,6 +11184,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -12958,6 +14126,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -13140,6 +14403,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -13241,6 +14523,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -13279,6 +14609,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -13304,6 +14735,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -14782,6 +16242,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -14964,6 +16519,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -15065,6 +16639,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -15103,6 +16725,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -15128,6 +16851,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       },
       {
@@ -17834,6 +19586,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -18016,6 +19863,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -18117,6 +19983,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -18155,6 +20069,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -18180,6 +20195,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       },
       {
@@ -21166,6 +23210,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -21348,6 +23487,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -21449,6 +23607,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -21487,6 +23693,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -21512,6 +23819,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -23718,6 +26054,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -23900,6 +26331,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -24001,6 +26451,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -24039,6 +26537,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -24064,6 +26663,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -25662,6 +28290,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -25844,6 +28567,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -25945,6 +28687,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -25983,6 +28773,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -26008,6 +28899,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -27373,6 +30293,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -27555,6 +30570,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -27656,6 +30690,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -27694,6 +30776,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -27719,6 +30902,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -29112,6 +32324,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -29294,6 +32601,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -29395,6 +32721,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -29433,6 +32807,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -29458,6 +32933,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -30702,6 +34206,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -30884,6 +34483,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -30985,6 +34603,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -31023,6 +34689,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -31048,6 +34815,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       },
       {
@@ -33570,6 +37366,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -33752,6 +37643,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -33853,6 +37763,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -33891,6 +37849,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -33916,6 +37975,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -35488,6 +39576,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -35670,6 +39853,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -35771,6 +39973,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -35809,6 +40059,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -35834,6 +40185,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -37374,6 +41754,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -37556,6 +42031,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -37657,6 +42151,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -37695,6 +42237,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -37720,6 +42363,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -39837,6 +44509,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -40019,6 +44786,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -40120,6 +44906,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -40158,6 +44992,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -40183,6 +45118,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       }
     ],
@@ -41691,6 +46655,101 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an admin or multisig signer clears the pool lock.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "timestamp",
+              "type_": "u64"
+            }
+          ],
+          "lib": "",
+          "name": "ForceUnlockEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a swap detects a fee-on-transfer token.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actual_received",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "amount_in",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "token_in",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "FotDetectedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP token's locker is changed.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "locker",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_token",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "LpLockerSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the LP rebate rate changes. The admin is indexed in the topic.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "lp_rebate_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "LpRebateSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the multisig signer set is installed or updated.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "actor",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "quorum",
+              "type_": "u32"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is added.",
           "fields": [
             {
@@ -41873,6 +46932,25 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a pending emergency withdrawal is cancelled.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyCancelEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when the flash loan fee is updated.",
           "fields": [
             {
@@ -41974,6 +47052,54 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer approves a proposal.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "approval_count",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigApprovedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "recipient",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted alongside `RouteSelectedEvent` when a second venue also quoted the\\ntrade, so the improvement the aggregator delivered is measurable.",
           "fields": [
             {
@@ -42012,6 +47138,107 @@
       },
       {
         "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal is announced.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "announced_at",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "delay_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyAnnounceEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when an emergency withdrawal transfers the pool reserves.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "EmergencyWithdrawEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig signer-set proposal is created.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "new_quorum",
+              "type_": "u32"
+            },
+            {
+              "doc": "",
+              "name": "proposal_id",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigSetProposedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when the circuit-breaker configuration changes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "cooldown_secs",
+              "type_": "u64"
+            },
+            {
+              "doc": "",
+              "name": "threshold_bps",
+              "type_": "i128"
+            }
+          ],
+          "lib": "",
+          "name": "CircuitBreakerConfigEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
           "doc": "Emitted when liquidity is removed as a single token.",
           "fields": [
             {
@@ -42037,6 +47264,35 @@
           ],
           "lib": "",
           "name": "RemoveLiquidityOneSidedEvent"
+        }
+      },
+      {
+        "udt_struct_v0": {
+          "doc": "Emitted when a multisig emergency-withdraw proposal executes.",
+          "fields": [
+            {
+              "doc": "",
+              "name": "drain_a",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "drain_b",
+              "type_": "i128"
+            },
+            {
+              "doc": "",
+              "name": "signer",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "to",
+              "type_": "address"
+            }
+          ],
+          "lib": "",
+          "name": "MultisigEmergencyWithdrawEvent"
         }
       },
       {
