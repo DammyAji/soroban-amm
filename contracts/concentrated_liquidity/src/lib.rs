@@ -29,10 +29,13 @@ const MIN_TICK: i32 = -887_272;
 const MAX_TICK: i32 = 887_272;
 const MIN_BITMAP_WORD_POS: i32 = -6_932;
 const MAX_BITMAP_WORD_POS: i32 = 6_931;
-const BITMAP_WORD_COUNT: i32 = MAX_BITMAP_WORD_POS - MIN_BITMAP_WORD_POS + 1;
+/// Bitmap words per `TickBitmapIndexPage`; the 13,864 possible words fit in
+/// 109 pages, so one `u128` root covers every page.
 const BITMAP_INDEX_PAGE_BITS: i32 = 128;
-const BITMAP_INDEX_PAGE_COUNT: i32 =
-    (BITMAP_WORD_COUNT + BITMAP_INDEX_PAGE_BITS - 1) / BITMAP_INDEX_PAGE_BITS;
+/// Upper bound on index pages one `migrate_tick_bitmap_index` call writes,
+/// keeping each batch's ledger footprint small regardless of how widely the
+/// legacy words are spread.
+const BITMAP_INDEX_MIGRATION_MAX_PAGES: u32 = 16;
 /// Fixed-point scale of the fee-growth accumulators (Q64 wide scale, issue #1098).
 pub const FEE_GROWTH_SCALE: i128 = 1_i128 << 64;
 
@@ -186,14 +189,22 @@ pub enum DataKey {
     /// Lets the legacy address-keyed entry points detect a tokenized position
     /// and defer control to the current NFT owner.
     PositionNftToken(Address, i32, i32),
-    /// Bitmap-word positions present in each fixed 128-word page.
+    /// `u128` presence bitmap of the non-empty `TickBitmap` words in one fixed
+    /// 128-word page (page `p` covers words `-6932 + 128p ..= -6932 + 128p + 127`).
     TickBitmapIndexPage(i32),
-    /// Presence bitmap for non-empty `TickBitmapIndexPage` entries.
+    /// `u128` presence bitmap of the non-empty `TickBitmapIndexPage` entries.
+    /// Absent means no page is populated.
     TickBitmapIndexRoot,
-    /// Set after the legacy `TickBitmapWords` index has been migrated.
+    /// Instance flag: the paged index is authoritative. Set by `initialize`, or
+    /// by `migrate_tick_bitmap_index` once a legacy pool has been migrated.
     TickBitmapIndexMigrated,
-    /// Legacy sorted word-position index, read once when upgrading existing pools.
+    /// Legacy sorted `Vec<i32>` of non-empty word positions, used only by pools
+    /// upgraded from the pre-paged index until `migrate_tick_bitmap_index`
+    /// finishes and removes it.
     TickBitmapWords,
+    /// Instance `i32`: legacy words below this position have been copied into
+    /// the paged index by an in-progress `migrate_tick_bitmap_index`.
+    TickBitmapIndexCursor,
     /// Persistent ring-buffer slot `0..cardinality` holding an [`OracleObservation`] (#1101).
     OracleObservation(u32),
     /// Instance-storage metadata ([`OracleHeader`]) for the oracle ring buffer (#1101).
@@ -2203,6 +2214,87 @@ impl ConcentratedLiquidity {
         Self::next_initialized_tick(&env, tick, true)
     }
 
+    /// Copy a bounded batch of the legacy sorted `TickBitmapWords` index into
+    /// the paged tick-bitmap index (#1311). Permissionless: it only rebuilds a
+    /// derived index from the pool's own state.
+    ///
+    /// Pools initialized by this version never need it. A pool upgraded from
+    /// the sorted-vector index keeps using (and maintaining) that vector for
+    /// swaps and mints until this has been called enough times to return 0.
+    /// Each call migrates at most `max_words` legacy words, in ascending order,
+    /// and writes each touched index page once, stopping early after 16 pages
+    /// so its ledger footprint stays small.
+    /// Words added or removed between batches are mirrored into the paged
+    /// index when the batch cursor has already passed them. Once the last word
+    /// is copied the legacy vector is deleted and the paged index takes over.
+    ///
+    /// Returns the number of legacy words not yet migrated (0 when finished or
+    /// when there is nothing to migrate).
+    pub fn migrate_tick_bitmap_index(env: Env, max_words: u32) -> Result<u32, ClError> {
+        Self::extend_instance_ttl(&env);
+        Self::read_admin(&env)?;
+        if Self::bitmap_index_migrated(&env) {
+            return Ok(0);
+        }
+
+        let words = Self::read_legacy_bitmap_words(&env).unwrap_or_else(|| Vec::new(&env));
+        let len = words.len();
+        let cursor = Self::bitmap_index_migration_cursor(&env);
+        let mut idx = Self::legacy_bitmap_lower_bound(&words, cursor, false);
+
+        let root_before = Self::read_bitmap_index_root(&env);
+        let mut root = root_before;
+        let mut page: Option<i32> = None;
+        let mut page_bits = 0_u128;
+        let mut pages_written = 0_u32;
+        let mut processed = 0_u32;
+        while idx < len && processed < max_words {
+            let word_pos = words.get_unchecked(idx);
+            if let Some(offset) = Self::bitmap_word_offset(word_pos) {
+                let word_page = offset / BITMAP_INDEX_PAGE_BITS;
+                if page != Some(word_page) {
+                    // Words are sorted, so each page is visited in one run and
+                    // written exactly once per batch.
+                    if let Some(done) = page.take() {
+                        Self::write_bitmap_index_page(&env, done, page_bits);
+                        root |= 1_u128 << done;
+                        pages_written += 1;
+                        if pages_written >= BITMAP_INDEX_MIGRATION_MAX_PAGES {
+                            break;
+                        }
+                    }
+                    page = Some(word_page);
+                    page_bits = Self::read_bitmap_index_page(&env, word_page);
+                }
+                page_bits |= 1_u128 << (offset % BITMAP_INDEX_PAGE_BITS);
+            }
+            idx += 1;
+            processed += 1;
+        }
+        if let Some(done) = page {
+            Self::write_bitmap_index_page(&env, done, page_bits);
+            root |= 1_u128 << done;
+        }
+        if root != root_before {
+            Self::write_bitmap_index_root(&env, root);
+        }
+
+        if idx >= len {
+            env.storage().persistent().remove(&DataKey::TickBitmapWords);
+            env.storage()
+                .instance()
+                .remove(&DataKey::TickBitmapIndexCursor);
+            env.storage()
+                .instance()
+                .set(&DataKey::TickBitmapIndexMigrated, &true);
+            return Ok(0);
+        }
+        env.storage()
+            .instance()
+            .set(&DataKey::TickBitmapIndexCursor, &words.get_unchecked(idx));
+        Ok(len - idx)
+    }
+
     // ── Issue #219 / #1099: sqrtPrice math library ────────────────────────────
 
     /// Converts a tick to `sqrtPriceX96 = sqrt(1.0001^tick) * 2^96`.
@@ -4124,46 +4216,76 @@ impl ConcentratedLiquidity {
         }
     }
 
-    fn ensure_bitmap_index_migrated(env: &Env) {
-        if env
-            .storage()
+    /// `true` once the paged index is authoritative. Pools initialized by this
+    /// version set the flag in `initialize`; pools upgraded from the sorted
+    /// `TickBitmapWords` index keep using it until `migrate_tick_bitmap_index`
+    /// has copied every legacy word into the paged index.
+    fn bitmap_index_migrated(env: &Env) -> bool {
+        env.storage()
             .instance()
             .get::<_, bool>(&DataKey::TickBitmapIndexMigrated)
             .unwrap_or(false)
-        {
-            return;
-        }
+    }
 
-        let legacy_words: Option<Vec<i32>> = env
-            .storage()
-            .persistent()
-            .get(&DataKey::TickBitmapWords)
-            .or_else(|| {
-                env.storage()
-                    .instance()
-                    .get(&DataKey::TickBitmapWords)
-            });
-        if let Some(words) = legacy_words {
-            for word_pos in words.iter() {
-                Self::update_bitmap_word_index(env, word_pos, true);
-            }
-        }
-
-        env.storage()
-            .persistent()
-            .remove(&DataKey::TickBitmapWords);
-        env.storage().instance().remove(&DataKey::TickBitmapWords);
+    /// Legacy words strictly below this position are already in the paged
+    /// index. Absent means the migration has not started.
+    fn bitmap_index_migration_cursor(env: &Env) -> i32 {
         env.storage()
             .instance()
-            .set(&DataKey::TickBitmapIndexMigrated, &true);
+            .get(&DataKey::TickBitmapIndexCursor)
+            .unwrap_or(MIN_BITMAP_WORD_POS)
+    }
+
+    fn read_legacy_bitmap_words(env: &Env) -> Option<Vec<i32>> {
+        let words: Option<Vec<i32>> = env.storage().persistent().get(&DataKey::TickBitmapWords);
+        if words.is_some() {
+            Self::bump_position(env, &DataKey::TickBitmapWords);
+        }
+        words
+    }
+
+    /// Index of the first element of the sorted `words` that is `>= word_pos`
+    /// (or `> word_pos` when `strict`).
+    fn legacy_bitmap_lower_bound(words: &Vec<i32>, word_pos: i32, strict: bool) -> u32 {
+        let mut low = 0u32;
+        let mut high = words.len();
+        while low < high {
+            let mid = low + (high - low) / 2;
+            let val = words.get_unchecked(mid);
+            if val < word_pos || (strict && val == word_pos) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        low
+    }
+
+    /// Keeps the legacy sorted index in sync while a pool has not finished
+    /// migrating, exactly as the pre-paged implementation did.
+    fn update_legacy_bitmap_words(env: &Env, word_pos: i32, present: bool) {
+        let mut words = Self::read_legacy_bitmap_words(env).unwrap_or_else(|| Vec::new(env));
+        let idx = Self::legacy_bitmap_lower_bound(&words, word_pos, false);
+        let found = idx < words.len() && words.get_unchecked(idx) == word_pos;
+        if present == found {
+            return;
+        }
+        if present {
+            words.insert(idx, word_pos);
+        } else {
+            words.remove(idx);
+        }
+        env.storage()
+            .persistent()
+            .set(&DataKey::TickBitmapWords, &words);
+        Self::bump_position(env, &DataKey::TickBitmapWords);
     }
 
     fn bitmap_word_offset(word_pos: i32) -> Option<i32> {
         if !(MIN_BITMAP_WORD_POS..=MAX_BITMAP_WORD_POS).contains(&word_pos) {
             return None;
         }
-        let offset = word_pos - MIN_BITMAP_WORD_POS;
-        Some(offset)
+        Some(word_pos - MIN_BITMAP_WORD_POS)
     }
 
     fn read_bitmap_index_page(env: &Env, page: i32) -> u128 {
@@ -4176,20 +4298,16 @@ impl ConcentratedLiquidity {
         }
     }
 
+    /// The root is rewritten on every empty <-> non-empty page transition and
+    /// removed when no page is populated, so a missing root means "no pages"
+    /// and never needs reconstructing from the pages.
     fn read_bitmap_index_root(env: &Env) -> u128 {
         let key = DataKey::TickBitmapIndexRoot;
         if let Some(bits) = env.storage().persistent().get(&key) {
             Self::bump_position(env, &key);
             bits
         } else {
-            let mut bits = 0_u128;
-            for page in 0..BITMAP_INDEX_PAGE_COUNT {
-                if Self::read_bitmap_index_page(env, page) != 0 {
-                    bits |= 1_u128 << page;
-                }
-            }
-            Self::write_bitmap_index_root(env, bits);
-            bits
+            0
         }
     }
 
@@ -4197,11 +4315,9 @@ impl ConcentratedLiquidity {
         let key = DataKey::TickBitmapIndexPage(page);
         if bits == 0 {
             env.storage().persistent().remove(&key);
-            env.storage().instance().remove(&key);
         } else {
             env.storage().persistent().set(&key, &bits);
             Self::bump_position(env, &key);
-            env.storage().instance().remove(&key);
         }
     }
 
@@ -4209,11 +4325,9 @@ impl ConcentratedLiquidity {
         let key = DataKey::TickBitmapIndexRoot;
         if bits == 0 {
             env.storage().persistent().remove(&key);
-            env.storage().instance().remove(&key);
         } else {
             env.storage().persistent().set(&key, &bits);
             Self::bump_position(env, &key);
-            env.storage().instance().remove(&key);
         }
     }
 
@@ -4222,9 +4336,6 @@ impl ConcentratedLiquidity {
             return;
         };
         let page = offset / BITMAP_INDEX_PAGE_BITS;
-        if page >= BITMAP_INDEX_PAGE_COUNT {
-            return;
-        }
         let bit = 1u128 << (offset % BITMAP_INDEX_PAGE_BITS);
         let page_before = Self::read_bitmap_index_page(env, page);
         let page_after = if present {
@@ -4236,9 +4347,9 @@ impl ConcentratedLiquidity {
             return;
         }
 
-        let root_before = Self::read_bitmap_index_root(env);
         Self::write_bitmap_index_page(env, page, page_after);
         if page_before == 0 || page_after == 0 {
+            let root_before = Self::read_bitmap_index_root(env);
             let root_bit = 1u128 << page;
             let root_after = if page_after == 0 {
                 root_before & !root_bit
@@ -4249,14 +4360,25 @@ impl ConcentratedLiquidity {
         }
     }
 
+    fn set_bitmap_word_index(env: &Env, word_pos: i32, present: bool) {
+        if !Self::bitmap_index_migrated(env) {
+            Self::update_legacy_bitmap_words(env, word_pos, present);
+            // Words at or above the cursor are copied from the legacy index
+            // by a later migration batch; only already-migrated words need
+            // mirroring into the paged index.
+            if word_pos >= Self::bitmap_index_migration_cursor(env) {
+                return;
+            }
+        }
+        Self::update_bitmap_word_index(env, word_pos, present);
+    }
+
     fn add_bitmap_word_index(env: &Env, word_pos: i32) {
-        Self::ensure_bitmap_index_migrated(env);
-        Self::update_bitmap_word_index(env, word_pos, true);
+        Self::set_bitmap_word_index(env, word_pos, true);
     }
 
     fn remove_bitmap_word_index(env: &Env, word_pos: i32) {
-        Self::ensure_bitmap_index_migrated(env);
-        Self::update_bitmap_word_index(env, word_pos, false);
+        Self::set_bitmap_word_index(env, word_pos, false);
     }
 
     fn flip_tick(env: &Env, tick: i32) {
@@ -4268,8 +4390,6 @@ impl ConcentratedLiquidity {
     }
 
     fn next_initialized_tick(env: &Env, tick: i32, zero_for_one: bool) -> Option<i32> {
-        Self::ensure_bitmap_index_migrated(env);
-
         if zero_for_one {
             let word_pos = tick.div_euclid(128);
             let bit_pos = tick.rem_euclid(128) as u32;
@@ -4285,7 +4405,7 @@ impl ConcentratedLiquidity {
                 return Some(word_pos * 128 + bit as i32);
             }
 
-            if let Some(next_word_pos) = Self::next_bitmap_word_index(env, word_pos, true) {
+            if let Some(next_word_pos) = Self::next_indexed_word(env, word_pos, true) {
                 let next_word = Self::get_bitmap_word(env, next_word_pos);
                 if next_word != 0 {
                     let bit = 127 - next_word.leading_zeros();
@@ -4305,7 +4425,7 @@ impl ConcentratedLiquidity {
                 return Some(word_pos * 128 + bit as i32);
             }
 
-            if let Some(next_word_pos) = Self::next_bitmap_word_index(env, word_pos, false) {
+            if let Some(next_word_pos) = Self::next_indexed_word(env, word_pos, false) {
                 let next_word = Self::get_bitmap_word(env, next_word_pos);
                 if next_word != 0 {
                     let bit = next_word.trailing_zeros();
@@ -4313,6 +4433,30 @@ impl ConcentratedLiquidity {
                 }
             }
             None
+        }
+    }
+
+    /// Nearest indexed (non-empty) bitmap word strictly below (`previous`) or
+    /// strictly above `word_pos`, from whichever index is authoritative.
+    fn next_indexed_word(env: &Env, word_pos: i32, previous: bool) -> Option<i32> {
+        if Self::bitmap_index_migrated(env) {
+            return Self::next_bitmap_word_index(env, word_pos, previous);
+        }
+        let words = Self::read_legacy_bitmap_words(env)?;
+        if previous {
+            let idx = Self::legacy_bitmap_lower_bound(&words, word_pos, false);
+            if idx == 0 {
+                None
+            } else {
+                Some(words.get_unchecked(idx - 1))
+            }
+        } else {
+            let idx = Self::legacy_bitmap_lower_bound(&words, word_pos, true);
+            if idx < words.len() {
+                Some(words.get_unchecked(idx))
+            } else {
+                None
+            }
         }
     }
 
@@ -9394,8 +9538,7 @@ mod test_single_token_deposit {
         assert!(f.nft.try_owner_of(&0_u64).is_err());
         assert_eq!(f.client.position_of_token(&0_u64), None);
         assert_eq!(
-            f.client
-                .position_token_id(&f.alice, &f.lower, &f.upper),
+            f.client.position_token_id(&f.alice, &f.lower, &f.upper),
             None
         );
 
@@ -11540,6 +11683,8 @@ mod test_range_order_fill_status {
 #[cfg(test)]
 mod tests_boundary_progress;
 
+#[cfg(test)]
+mod tests_bitmap_index;
 #[cfg(test)]
 mod tests_issue_1100;
 #[cfg(test)]
