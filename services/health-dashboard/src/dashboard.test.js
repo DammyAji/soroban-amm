@@ -382,6 +382,8 @@ test("addAlert submits TVL floor comparison and configured comparison is rendere
   await controller.addAlert();
 
   assert.equal(mutation.variables.comparison, "below");
+  assert.match(mutation.query, /setAlertConfig\([^)]*comparison: \$comparison/);
+  assert.match(mutation.query, /\{ poolId metric comparison /);
   assert.ok(doc.getElementById("alert-list").children[0].textContent.includes("< 500"));
 });
 
