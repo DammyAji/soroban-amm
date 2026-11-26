@@ -192,8 +192,8 @@ pub enum DataKey {
     /// `u128` presence bitmap of the non-empty `TickBitmap` words in one fixed
     /// 128-word page (page `p` covers words `-6932 + 128p ..= -6932 + 128p + 127`).
     TickBitmapIndexPage(i32),
-    /// `u128` presence bitmap of the non-empty `TickBitmapIndexPage` entries.
-    /// Absent means no page is populated.
+    /// Instance `u128` presence bitmap of the non-empty `TickBitmapIndexPage`
+    /// entries. Absent means no page is populated.
     TickBitmapIndexRoot,
     /// Instance flag: the paged index is authoritative. Set by `initialize`, or
     /// by `migrate_tick_bitmap_index` once a legacy pool has been migrated.
@@ -4300,15 +4300,14 @@ impl ConcentratedLiquidity {
 
     /// The root is rewritten on every empty <-> non-empty page transition and
     /// removed when no page is populated, so a missing root means "no pages"
-    /// and never needs reconstructing from the pages.
+    /// and never needs reconstructing from the pages. It is a fixed-size
+    /// `u128` in instance storage, so reading it adds no ledger entry to the
+    /// footprint and needs no TTL bump of its own.
     fn read_bitmap_index_root(env: &Env) -> u128 {
-        let key = DataKey::TickBitmapIndexRoot;
-        if let Some(bits) = env.storage().persistent().get(&key) {
-            Self::bump_position(env, &key);
-            bits
-        } else {
-            0
-        }
+        env.storage()
+            .instance()
+            .get(&DataKey::TickBitmapIndexRoot)
+            .unwrap_or(0)
     }
 
     fn write_bitmap_index_page(env: &Env, page: i32, bits: u128) {
@@ -4324,10 +4323,9 @@ impl ConcentratedLiquidity {
     fn write_bitmap_index_root(env: &Env, bits: u128) {
         let key = DataKey::TickBitmapIndexRoot;
         if bits == 0 {
-            env.storage().persistent().remove(&key);
+            env.storage().instance().remove(&key);
         } else {
-            env.storage().persistent().set(&key, &bits);
-            Self::bump_position(env, &key);
+            env.storage().instance().set(&key, &bits);
         }
     }
 

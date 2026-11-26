@@ -70,7 +70,12 @@ fn paged_index(te: &TestEnv) -> (std::vec::Vec<u128>, Option<u128>) {
                     .unwrap_or(0)
             })
             .collect();
-        (pages, storage.get(&DataKey::TickBitmapIndexRoot))
+        let root = te
+            .env
+            .storage()
+            .instance()
+            .get(&DataKey::TickBitmapIndexRoot);
+        (pages, root)
     })
 }
 
@@ -93,7 +98,7 @@ fn convert_to_legacy_index(te: &TestEnv) {
                 .remove(&DataKey::TickBitmapIndexPage(p as i32));
         }
         let storage = te.env.storage();
-        storage.persistent().remove(&DataKey::TickBitmapIndexRoot);
+        storage.instance().remove(&DataKey::TickBitmapIndexRoot);
         storage.instance().remove(&DataKey::TickBitmapIndexMigrated);
         storage.persistent().set(&DataKey::TickBitmapWords, &words);
     });
@@ -429,7 +434,7 @@ fn test_migration_batch_writes_at_most_sixteen_pages() {
 /// they do not control for it), so the pool is padded with unrelated entries
 /// up to `INDEX_ENTRY_BUDGET` index entries in every run.
 fn mint_cost_with_indexed_words(words: &[i32], legacy: bool) -> (u64, u64) {
-    const INDEX_ENTRY_BUDGET: u64 = PAGE_COUNT as u64 + 1;
+    const INDEX_ENTRY_BUDGET: u64 = PAGE_COUNT as u64;
     let te = setup_test();
     let provider = funded(&te);
 
@@ -462,8 +467,10 @@ fn mint_cost_with_indexed_words(words: &[i32], legacy: bool) -> (u64, u64) {
                     index_entries += 1;
                 }
             }
-            storage.set(&DataKey::TickBitmapIndexRoot, &root);
-            index_entries += 1;
+            te.env
+                .storage()
+                .instance()
+                .set(&DataKey::TickBitmapIndexRoot, &root);
         }
         for i in index_entries..INDEX_ENTRY_BUDGET {
             storage.set(&DataKey::OraclePoint(i), &0_i64);

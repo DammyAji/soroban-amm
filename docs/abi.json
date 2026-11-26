@@ -10627,7 +10627,7 @@
             },
             {
               "void_v0": {
-                "doc": "`u128` presence bitmap of the non-empty `TickBitmapIndexPage` entries.\\nAbsent means no page is populated.",
+                "doc": "Instance `u128` presence bitmap of the non-empty `TickBitmapIndexPage`\\nentries. Absent means no page is populated.",
                 "name": "TickBitmapIndexRoot"
               }
             },
