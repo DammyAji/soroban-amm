@@ -13363,6 +13363,63 @@
       },
       {
         "function_v0": {
+          "doc": "Upgrade the contract WASM in place. Admin-only.",
+          "inputs": [
+            {
+              "doc": "",
+              "name": "admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "new_wasm_hash",
+              "type_": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          ],
+          "name": "upgrade",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "AggregatorError"
+                  }
+                },
+                "ok_type": {
+                  "tuple": {
+                    "value_types": []
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "function_v0": {
+          "doc": "Return the stored admin address, or `NotInitialized` before `initialize`.",
+          "inputs": [],
+          "name": "get_admin",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "AggregatorError"
+                  }
+                },
+                "ok_type": "address"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "function_v0": {
           "doc": "Read-only quote for off-chain simulation (#319).",
           "inputs": [
             {
@@ -13472,6 +13529,12 @@
               "void_v0": {
                 "doc": "",
                 "name": "Admin"
+              }
+            },
+            {
+              "void_v0": {
+                "doc": "",
+                "name": "PendingAdmin"
               }
             },
             {
@@ -13595,6 +13658,54 @@
           ],
           "lib": "",
           "name": "RouteHop"
+        }
+      },
+      {
+        "function_v0": {
+          "doc": "Return the stored factory address, or `NotInitialized` before `initialize`.",
+          "inputs": [],
+          "name": "get_factory",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "AggregatorError"
+                  }
+                },
+                "ok_type": "address"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "function_v0": {
+          "doc": "Accept a pending admin nomination (step 2 of 2). Nominee-only.",
+          "inputs": [
+            {
+              "doc": "",
+              "name": "new_admin",
+              "type_": "address"
+            }
+          ],
+          "name": "accept_admin",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "AggregatorError"
+                  }
+                },
+                "ok_type": {
+                  "tuple": {
+                    "value_types": []
+                  }
+                }
+              }
+            }
+          ]
         }
       },
       {
@@ -13733,6 +13844,40 @@
       },
       {
         "function_v0": {
+          "doc": "Nominate `new_admin` as the pending admin (step 1 of 2). Admin-only.",
+          "inputs": [
+            {
+              "doc": "",
+              "name": "current_admin",
+              "type_": "address"
+            },
+            {
+              "doc": "",
+              "name": "new_admin",
+              "type_": "address"
+            }
+          ],
+          "name": "propose_admin",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "AggregatorError"
+                  }
+                },
+                "ok_type": {
+                  "tuple": {
+                    "value_types": []
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "function_v0": {
           "doc": "",
           "inputs": [
             {
@@ -13849,6 +13994,20 @@
         }
       },
       {
+        "function_v0": {
+          "doc": "Return the pending admin nominee, if any.",
+          "inputs": [],
+          "name": "get_pending_admin",
+          "outputs": [
+            {
+              "option": {
+                "value_type": "address"
+              }
+            }
+          ]
+        }
+      },
+      {
         "udt_error_enum_v0": {
           "cases": [
             {
@@ -13877,7 +14036,7 @@
               "value": 5
             },
             {
-              "doc": "A function that reads the admin or factory was called before\\n`initialize`.",
+              "doc": "A function that reads the admin or factory (or `accept_admin` without a\\npending nomination) was called before `initialize` / nomination.",
               "name": "NotInitialized",
               "value": 6
             },
@@ -13887,7 +14046,7 @@
               "value": 7
             },
             {
-              "doc": "`pause` / `unpause` was called with an address that is not the stored\\nadmin.",
+              "doc": "An admin- or nominee-gated entrypoint (`pause`, `unpause`,\\n`propose_admin`, `accept_admin`, `upgrade`) was called with an\\naddress that does not match the stored admin or pending nominee.",
               "name": "Unauthorized",
               "value": 8
             }
