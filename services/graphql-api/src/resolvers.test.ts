@@ -42,6 +42,16 @@ function assertBadUserInput(errors: ClientError[], message: RegExp) {
 }
 
 describe("BAD_USER_INPUT reaches clients", () => {
+  it("poolEvents rejects zero, negative, and oversized limits", async () => {
+    for (const limit of [0, -1, 1001]) {
+      const errors = await clientErrors(
+        "query ($limit: Int) { poolEvents(poolId: \"pool-1\", limit: $limit) { id } }",
+        { limit },
+      );
+      assertBadUserInput(errors, /limit must be an integer between 1 and 1000/);
+    }
+  });
+
   it("twal rejects a non-positive windowSeconds", async () => {
     for (const windowSeconds of [0, -60]) {
       const errors = await clientErrors(

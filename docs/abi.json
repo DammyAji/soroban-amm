@@ -2642,6 +2642,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -5085,6 +5115,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -7530,6 +7590,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -10114,6 +10204,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -13665,6 +13785,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -15781,6 +15931,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -19125,6 +19305,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -22749,6 +22959,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -25593,6 +25833,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -27829,6 +28099,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -29832,6 +30132,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -30983,6 +31313,39 @@
       },
       {
         "function_v0": {
+          "doc": "Replace the contract WASM. Governance-only; stored state is preserved.",
+          "inputs": [
+            {
+              "doc": "",
+              "name": "new_wasm_hash",
+              "type_": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          ],
+          "name": "upgrade",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "ReserveManagerError"
+                  }
+                },
+                "ok_type": {
+                  "tuple": {
+                    "value_types": []
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "function_v0": {
           "doc": "Return the active admin address. Reads [`DataKey::Governance`] \\xe2\\x80\\x94 the\\nsingle source of truth \\xe2\\x80\\x94 so `get_admin() == get_governance()` after\\nany handover through either entrypoint.",
           "inputs": [],
           "name": "get_admin",
@@ -31863,6 +32226,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -33242,7 +33635,7 @@
       },
       {
         "function_v0": {
-          "doc": "Execute a multi-hop swap along `path`.",
+          "doc": "Execute a multi-hop exact-input swap along `path`.\\n\\n`path` may contain at most [`MAX_PATH_LEN`] token addresses.",
           "inputs": [
             {
               "doc": "",
@@ -33356,6 +33749,11 @@
               "doc": "A hop pool rejected a swap or quote call (e.g. paused, empty reserves,\\nor another pool-level error).",
               "name": "PoolCallFailed",
               "value": 13
+            },
+            {
+              "doc": "The path contains more than [`MAX_PATH_LEN`] tokens.",
+              "name": "PathTooLong",
+              "value": 14
             }
           ],
           "doc": "Errors surfaced by the router.\\n\\nEvery caller-triggerable failure path returns one of these discriminants\\ninstead of trapping, so integrators can branch on the specific reason a\\nmulti-hop route failed. Discriminants 1 and 2 follow the workspace-wide\\nconvention (`AlreadyInitialized` / `NotInitialized`); see\\n`contracts/amm/src/lib.rs` `AmmError` for the reference enum.",
@@ -33365,7 +33763,7 @@
       },
       {
         "function_v0": {
-          "doc": "",
+          "doc": "Execute an exact-output route.\\n\\n`path` may contain at most [`MAX_PATH_LEN`] token addresses.",
           "inputs": [
             {
               "doc": "",
@@ -33414,7 +33812,7 @@
       },
       {
         "function_v0": {
-          "doc": "Whether every hop in `path` has a deployed pool.\\n\\nThis is the unambiguous replacement for\\n[`Router::get_amount_out_path`]'s `0` return: a route that is simply\\nmissing a pool is `false` here, while a routable path that quotes zero\\noutput is `true`. A malformed path (fewer than two tokens, or a repeated\\nadjacent token) is also `false` -- a predicate reports rather than\\npanics.",
+          "doc": "Whether every hop in `path` has a deployed pool.\\n\\nThis is the unambiguous replacement for\\n[`Router::get_amount_out_path`]'s `0` return: a route that is simply\\nmissing a pool is `false` here, while a routable path that quotes zero\\noutput is `true`. A malformed path (fewer than two tokens, more than\\n[`MAX_PATH_LEN`] tokens, or a repeated adjacent token) is also `false`\\n-- a predicate reports rather than panics, and it agrees with the swap\\nand quote entrypoints, which reject those paths.",
           "inputs": [
             {
               "doc": "",
@@ -33745,6 +34143,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -36905,6 +37333,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -39115,6 +39573,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -41293,6 +41781,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -44048,6 +44566,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",
@@ -46194,6 +46742,36 @@
               "doc": "",
               "name": "NoPendingProposal",
               "value": 24
+            },
+            {
+              "doc": "",
+              "name": "QuorumNotReached",
+              "value": 25
+            },
+            {
+              "doc": "",
+              "name": "InvalidQuorum",
+              "value": 26
+            },
+            {
+              "doc": "",
+              "name": "EmergencyDelayNotElapsed",
+              "value": 27
+            },
+            {
+              "doc": "",
+              "name": "InvalidRecipient",
+              "value": 28
+            },
+            {
+              "doc": "",
+              "name": "MultisigGuardActive",
+              "value": 29
+            },
+            {
+              "doc": "",
+              "name": "InvalidEmergencyDelay",
+              "value": 30
             }
           ],
           "doc": "Every error that the AMM pool contract can return.\\n\\nThe numeric values match the on-chain `AmmError` discriminants so that\\nXDR-decoded invocation results can be round-tripped through this type.\\n\\n| Code | Name                 | Cause                                               | Remedy                                            |\\n|------|----------------------|-----------------------------------------------------|---------------------------------------------------|\\n| 1    | AlreadyInitialized   | `initialize` called on a pool that is already set up | Deploy a new pool contract instead                |\\n| 2    | InvalidFeeBps        | Fee outside `[0, 10 000]` bps or protocol fee > swap fee | Use a value in the accepted range           |\\n| 3    | InsufficientShares   | LP burn amount exceeds caller's balance              | Reduce `shares` to \\xe2\\x89\\xa4 `shares_of(provider)`       |\\n| 4    | DeadlineExceeded     | `deadline` ledger timestamp already passed           | Re-submit with a future deadline                  ",

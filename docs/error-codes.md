@@ -110,6 +110,12 @@ Defined in [contracts/amm-sdk/src/types.rs](../contracts/amm-sdk/src/types.rs) a
 | 22 | `PoolDrained` | Pool entered terminal `Drained` state after emergency withdrawal (#1095). | Deploy a new pool; drained pools are permanently retired. |
 | 23 | `QuorumNotMet` | Multisig emergency withdrawal approvals are below `MultisigQuorum` (#1095). | Collect enough signer approvals before executing. |
 | 24 | `NoPendingProposal` | `exec_multisig_emergency_wd` called with no active multisig proposal (#1095). | Call `propose_emergency_withdraw` first. |
+| 25 | `QuorumNotReached` | Emergency withdrawal collected approvals are below the multisig quorum. | Collect enough signer approvals. |
+| 26 | `InvalidQuorum` | The quorum or signer set is invalid. | Reconfigure the multisig. |
+| 27 | `EmergencyDelayNotElapsed` | The emergency delay has not elapsed. | Wait until the delay expires. |
+| 28 | `InvalidRecipient` | The recipient is invalid or differs from the announcement. | Use the valid announced recipient. |
+| 29 | `MultisigGuardActive` | Multisig configuration was changed while a guard is active. | Complete or propose the required guarded transition. |
+| 30 | `InvalidEmergencyDelay` | The configured emergency delay exceeds the maximum. | Use a delay within the configured maximum. |
 
 ---
 
@@ -503,6 +509,7 @@ Defined in [contracts/router/src/lib.rs](../contracts/router/src/lib.rs) as `Rou
 | 11 | `InvalidFactory` | `initialize` could not call the factory's `get_pool_count` interface. | Pass a deployed factory contract address. |
 | 12 | `NoPendingAdmin` | `accept_admin` was called without a pending nomination. | Call `propose_admin` first. |
 | 13 | `PoolCallFailed` | A hop pool rejected a swap or quote call (e.g. paused, empty reserves, or another pool-level error). | Inspect the hop pools along the path (pause state, reserves, liquidity) before retrying. |
+| 14 | `PathTooLong` | The path has more than `MAX_PATH_LEN` (8) tokens (#1355). Every swap, quote and path view rejects it; `is_path_routable` returns `false`. | Split the route into paths of at most eight tokens. |
 
 ---
 

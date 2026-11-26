@@ -8,6 +8,7 @@ import { describe, it } from "node:test";
 import {
   PoolIndexer,
   RETENTION_SECONDS,
+  MAX_POOL_EVENTS_LIMIT,
   InvalidMetricError,
   InvalidThresholdError,
   seedDemoData,
@@ -359,6 +360,13 @@ describe("getEvents", () => {
     assert.equal(last2.length, 2);
     assert.equal(last2[0].id, "e3");
     assert.equal(last2[1].id, "e2");
+  });
+
+  it("rejects zero, negative, and oversized limits", () => {
+    const idx = makeIndexer();
+    for (const limit of [0, -1, MAX_POOL_EVENTS_LIMIT + 1]) {
+      assert.throws(() => idx.getEvents("p1", limit), /limit must be an integer between 1 and 1000/);
+    }
   });
 });
 

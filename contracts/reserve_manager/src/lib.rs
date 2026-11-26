@@ -46,7 +46,7 @@
 use soroban_amm_sdk::emit_versioned_event;
 use soroban_sdk::{
     contract, contractclient, contracterror, contractimpl, contracttype, symbol_short, Address,
-    Env, Symbol, Vec,
+    BytesN, Env, Symbol, Vec,
 };
 
 // ── Storage TTL ──────────────────────────────────────────────────────────────
@@ -378,6 +378,17 @@ impl ReserveManager {
         gov.require_auth();
         env.storage().instance().set(&DataKey::Paused, &false);
         emit_versioned_event!(env, (symbol_short!("unpause"),), ());
+        Ok(())
+    }
+
+    /// Replace the contract WASM. Governance-only; stored state is preserved.
+    pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), ReserveManagerError> {
+        Self::extend_instance_ttl(&env);
+        let governance: Address = env.storage().instance().get(&DataKey::Governance).unwrap();
+        governance.require_auth();
+        env.deployer()
+            .update_current_contract_wasm(new_wasm_hash.clone());
+        emit_versioned_event!(env, (Symbol::new(&env, "upgraded"),), (new_wasm_hash,));
         Ok(())
     }
 
@@ -946,6 +957,8 @@ impl ReserveManager {
 
 #[cfg(test)]
 mod tests {
+    extern crate std;
+
     use amm::AmmPool;
     use soroban_sdk::{
         testutils::{
@@ -1221,6 +1234,94 @@ mod tests {
         assert_eq!(rm.get_governance(), gov);
         assert_eq!(rm.get_factory(), factory);
         assert_eq!(rm.get_admin(), Some(gov.clone()));
+    }
+
+    fn own_wasm(env: &Env) -> BytesN<32> {
+        env.budget().reset_unlimited();
+        let wasm = soroban_sdk::Bytes::from_slice(
+            env,
+            include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../target/wasm32v1-none/release/reserve_manager.wasm"
+            )),
+        );
+        env.deployer().upload_contract_wasm(wasm)
+    }
+
+    /// Runs `f` and returns the host error message it panics with. The
+    /// `try_` client cannot be used to inspect an auth failure: the host
+    /// reports any non-contract error from a sub-call as
+    /// `Error(Context, InvalidAction)`, so the specific `Error(Auth, ...)`
+    /// is only visible in the panic message of the plain client call.
+    fn panic_message(f: impl FnOnce()) -> std::string::String {
+        let prev_hook = std::panic::take_hook();
+        std::panic::set_hook(std::boxed::Box::new(|_| {}));
+        let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
+        std::panic::set_hook(prev_hook);
+        let err = res.expect_err("call should have been rejected");
+        if let Some(s) = err.downcast_ref::<&str>() {
+            std::string::String::from(*s)
+        } else if let Some(s) = err.downcast_ref::<std::string::String>() {
+            s.clone()
+        } else {
+            std::string::String::new()
+        }
+    }
+
+    #[test]
+    fn test_upgrade_rejects_non_governance_caller() {
+        let env = Env::default();
+        let gov = Address::generate(&env);
+        let stranger = Address::generate(&env);
+        let factory = Address::generate(&env);
+        let rm_addr = env.register_contract(None, ReserveManager);
+        let rm = ReserveManagerClient::new(&env, &rm_addr);
+        rm.initialize(&gov, &factory);
+        let hash = own_wasm(&env);
+
+        // No authorization at all.
+        let msg = panic_message(|| rm.upgrade(&hash));
+        assert!(
+            msg.contains("Error(Auth, InvalidAction)"),
+            "expected Error(Auth, InvalidAction), got: {msg}"
+        );
+
+        // A non-governance address authorizing the exact call is still rejected.
+        env.mock_auths(&[MockAuth {
+            address: &stranger,
+            invoke: &MockAuthInvoke {
+                contract: &rm_addr,
+                fn_name: "upgrade",
+                args: (hash.clone(),).into_val(&env),
+                sub_invokes: &[],
+            },
+        }]);
+        let msg = panic_message(|| rm.upgrade(&hash));
+        assert!(
+            msg.contains("Error(Auth, InvalidAction)"),
+            "expected Error(Auth, InvalidAction), got: {msg}"
+        );
+        assert_eq!(rm.get_governance(), gov);
+    }
+
+    #[test]
+    fn test_governance_upgrade_preserves_state_and_emits_event() {
+        let s = setup();
+        let rm = ReserveManagerClient::new(&s.env, &s.rm_addr);
+        rm.set_min_reserve(&s.ta, &s.tb, &500_000_i128, &300_000_i128);
+        rm.set_pool_kind(&s.pool, &PoolKind::Amm);
+        let hash = own_wasm(&s.env);
+
+        rm.upgrade(&hash);
+
+        let req = rm.get_min_reserve(&s.ta, &s.tb);
+        assert_eq!(req.min_reserve_a, 500_000);
+        assert_eq!(req.min_reserve_b, 300_000);
+        assert_eq!(rm.get_pool_kind(&s.pool), Some(PoolKind::Amm));
+        assert_eq!(rm.get_governance(), s.governance);
+        let (version, data): (u32, (BytesN<32>,)) = last_versioned_event(&s, "upgraded");
+        assert_eq!(version, 1);
+        assert_eq!(data.0, hash);
     }
 
     #[test]
