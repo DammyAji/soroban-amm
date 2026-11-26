@@ -745,6 +745,7 @@ impl Staking {
 
     /// Return current admin address.
     pub fn get_admin(env: Env) -> Result<Address, StakingError> {
+        Self::extend_instance_ttl(&env);
         env.storage()
             .instance()
             .get(&DataKey::Admin)
@@ -753,6 +754,7 @@ impl Staking {
 
     /// Return pending admin nominee, if any.
     pub fn get_pending_admin(env: Env) -> Option<Address> {
+        Self::extend_instance_ttl(&env);
         env.storage()
             .instance()
             .get(&DataKey::PendingAdmin)
@@ -2441,6 +2443,26 @@ mod tests {
         let staking = StakingClient::new(&env, &staking_addr);
 
         staking.initialize(&lp_token.address, &reward_token.address, &admin);
+
+        assert_instance_ttl_bumped(&env, &staking);
+    }
+
+    #[test]
+    fn test_admin_views_extend_instance_ttl() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let (_admin, _staker, staking) = setup(&env);
+        lower_instance_ttl_below_min(&env, &staking);
+        assert!(instance_ttl(&env, &staking) < MIN_TTL);
+
+        staking.get_admin();
+
+        assert_instance_ttl_bumped(&env, &staking);
+
+        lower_instance_ttl_below_min(&env, &staking);
+        assert!(instance_ttl(&env, &staking) < MIN_TTL);
+
+        staking.get_pending_admin();
 
         assert_instance_ttl_bumped(&env, &staking);
     }
