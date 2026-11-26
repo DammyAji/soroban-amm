@@ -663,6 +663,9 @@ count. Events marked unversioned carry their payload without the
 
 | Event | Topics | Payload fields | Envelope |
 |---|---|---|---|
+| `pause` | 1 | `admin` | v1 |
+| `unpause` | 1 | `admin` | v1 |
+| `upgraded` | 1 | `new_wasm_hash` | v1 |
 | `order_submitted` | 2 | `id`, `amount_in` | v1 |
 | `order_cancelled` | 2 | `order_id` | v1 |
 | `order_expired` | 2 | `order_id` | v1 |
@@ -680,9 +683,6 @@ count. Events marked unversioned carry their payload without the
 | `admin_nominated` | 1 | `current_admin`, `new_admin` | v1 |
 | `admin_changed` | 1 | `new_admin` | v1 |
 | `window_bounds_updated` | 1 | `min_secs`, `max_secs` | v1 |
-| `pause` | 1 | `admin` | v1 |
-| `unpause` | 1 | `admin` | v1 |
-| `upgraded` | 1 | `new_wasm_hash` | v1 |
 
 ### `batch_router`
 
@@ -701,6 +701,8 @@ count. Events marked unversioned carry their payload without the
 
 | Event | Topics | Payload fields | Envelope |
 |---|---|---|---|
+| `accept_transfers_set` | 2 | `accepts` | v1 |
+| `ttl_params_set` | 1 | `min_ttl_threshold`, `bump_to` | v1 |
 | `initialized` | 1 | `admin`, `cl_pool` | v1 |
 | `admin_nominated` | 1 | `current_admin`, `new_admin` | v1 |
 | `admin_transferred` | 1 | `new_admin` | v1 |
@@ -745,6 +747,9 @@ count. Events marked unversioned carry their payload without the
 |---|---|---|---|
 | `pause` | 1 | `admin` | v1 |
 | `unpause` | 1 | `admin` | v1 |
+| `admin_nominated` | 1 | `current_admin`, `new_admin` | v1 |
+| `admin_changed` | 1 | `new_admin` | v1 |
+| `upgraded` | 1 | `new_wasm_hash` | v1 |
 | `cl_reg` | 1 | `token_a`, `token_b`, `fee_bps`, `pool` | v1 |
 | `route_sel` | 1 | `venue`, `venue_kind`, `amount_in`, `amount_out` | v1 |
 | `route_alt` | 1 | `venue`, `amount_out`, `alt_venue`, `alt_venue_kind`, `alt_amount_out` | v1 |

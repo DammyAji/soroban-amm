@@ -3931,3 +3931,6 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod auth_tests;
