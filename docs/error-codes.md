@@ -509,6 +509,7 @@ Defined in [contracts/router/src/lib.rs](../contracts/router/src/lib.rs) as `Rou
 | 11 | `InvalidFactory` | `initialize` could not call the factory's `get_pool_count` interface. | Pass a deployed factory contract address. |
 | 12 | `NoPendingAdmin` | `accept_admin` was called without a pending nomination. | Call `propose_admin` first. |
 | 13 | `PoolCallFailed` | A hop pool rejected a swap or quote call (e.g. paused, empty reserves, or another pool-level error). | Inspect the hop pools along the path (pause state, reserves, liquidity) before retrying. |
+| 14 | `PathTooLong` | The path has more than `MAX_PATH_LEN` (8) tokens (#1355). Every swap, quote and path view rejects it; `is_path_routable` returns `false`. | Split the route into paths of at most eight tokens. |
 
 ---
 
