@@ -11,6 +11,7 @@ import type {
 } from "./store/interface.js";
 
 export const RETENTION_SECONDS = 30 * 24 * 60 * 60;
+export const MAX_POOL_EVENTS_LIMIT = 1000;
 const ROLLING_WINDOW_SECONDS = 24 * 60 * 60;
 const PRICE_DEVIATION_WINDOW_SECONDS = 60 * 60;
 const DEFAULT_FEE_BPS = 30;
@@ -18,6 +19,15 @@ const DEFAULT_FEE_BPS = 30;
 export type PoolEvent = Omit<StoredPoolEvent, "ledger" | "txHash" | "eventIndex"> &
   Partial<Pick<StoredPoolEvent, "ledger" | "txHash" | "eventIndex">>;
 export type { PoolEventType, PoolStats, Position, PricePoint, HealthAlert };
+
+export function validatePoolEventsLimit(limit: number): number {
+  if (!Number.isInteger(limit) || limit <= 0 || limit > MAX_POOL_EVENTS_LIMIT) {
+    throw new RangeError(
+      `limit must be an integer between 1 and ${MAX_POOL_EVENTS_LIMIT}`,
+    );
+  }
+  return limit;
+}
 
 export interface PoolConfig {
   tokenA: string;
@@ -229,8 +239,9 @@ export class PoolIndexer {
   }
 
   getEvents(poolId?: string, limit = 100): PoolEvent[] {
+    const validatedLimit = validatePoolEventsLimit(limit);
     const filtered = poolId ? this.events.filter((event) => event.poolId === poolId) : this.events;
-    return filtered.slice(-limit).reverse();
+    return filtered.slice(-validatedLimit).reverse();
   }
 
   getPositions(owner?: string): Position[] {

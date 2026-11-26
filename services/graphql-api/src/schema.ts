@@ -85,6 +85,7 @@ export const typeDefs = `#graphql
 
   type Query {
     poolStats(poolId: ID): [PoolStats!]!
+    "Maximum 1000 events. limit must be between 1 and 1000."
     poolEvents(poolId: ID, limit: Int = 100): [PoolEvent!]!
     positions(owner: String): [Position!]!
     "from and to are inclusive bounds in seconds since the Unix epoch."
