@@ -106,15 +106,16 @@ export class SorobanRpcAdapter implements SorobanRpc<Transaction, xdr.ScVal> {
 
   async getTransaction(hash: string): Promise<SorobanTransactionResponse<xdr.ScVal>> {
     const response = await this.server.getTransaction(hash)
-    switch (response.status) {
-      case 'SUCCESS':
+    const status = response.status
+    switch (status) {
+      case rpc.Api.GetTransactionStatus.SUCCESS:
         return { status: 'SUCCESS', returnValue: response.returnValue }
-      case 'FAILED':
+      case rpc.Api.GetTransactionStatus.FAILED:
         return { status: 'FAILED' }
-      case 'NOT_FOUND':
+      case rpc.Api.GetTransactionStatus.NOT_FOUND:
         return { status: 'NOT_FOUND' }
       default:
-        throw new TypeError(`Unexpected transaction status: ${String(response.status)}`)
+        throw new TypeError(`Unexpected transaction status: ${String(status)}`)
     }
   }
 

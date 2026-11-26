@@ -663,6 +663,9 @@ count. Events marked unversioned carry their payload without the
 
 | Event | Topics | Payload fields | Envelope |
 |---|---|---|---|
+| `pause` | 1 | `admin` | v1 |
+| `unpause` | 1 | `admin` | v1 |
+| `upgraded` | 1 | `new_wasm_hash` | v1 |
 | `order_submitted` | 2 | `id`, `amount_in` | v1 |
 | `order_cancelled` | 2 | `order_id` | v1 |
 | `order_expired` | 2 | `order_id` | v1 |
@@ -680,9 +683,6 @@ count. Events marked unversioned carry their payload without the
 | `admin_nominated` | 1 | `current_admin`, `new_admin` | v1 |
 | `admin_changed` | 1 | `new_admin` | v1 |
 | `window_bounds_updated` | 1 | `min_secs`, `max_secs` | v1 |
-| `pause` | 1 | `admin` | v1 |
-| `unpause` | 1 | `admin` | v1 |
-| `upgraded` | 1 | `new_wasm_hash` | v1 |
 
 ### `batch_router`
 
