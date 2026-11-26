@@ -333,7 +333,7 @@ Token amounts for a position `[lower_tick, upper_tick]` with liquidity `L` are d
   ```
 - [Stellar CLI](https://developers.stellar.org/docs/tools/stellar-cli) (`stellar`) for deployment:
   ```sh
-  cargo install --locked stellar-cli --features opt
+  cargo install --locked stellar-cli --version "$(cat .stellar-version)"
   ```
 
 ### Setup
@@ -487,7 +487,7 @@ docker run --rm -v $(pwd):/app soroban-amm-build
 ```
 
 - **Base Image**: `rust:1.98.1-slim-bookworm` (matches `rust-toolchain.toml`)
-- **Stellar CLI**: `27.1.0`
+- **Stellar CLI**: pinned in [`.stellar-version`](.stellar-version)
 
 ### Deploy via Factory
 

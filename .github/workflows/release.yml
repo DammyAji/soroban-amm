@@ -105,7 +105,7 @@ jobs:
         run: make check-test-modules
 
       - name: Install Stellar CLI
-        uses: stellar/stellar-cli@v27.1.0
+        uses: stellar/stellar-cli@v30.0.1
 
       - name: ABI check
         run: bash scripts/check_abi.sh
@@ -144,7 +144,12 @@ jobs:
           set -euo pipefail
           bash scripts/release_manifest.sh write-checksums release-artifacts
           rust_toolchain="$(rustup show active-toolchain | awk '{print $1}')"
-          stellar_version="$(stellar --version | sed -E 's/^[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*$/\1/')"
+          stellar_version="$(stellar version --only-version)"
+          expected_stellar_version="$(cat .stellar-version)"
+          if [[ "$stellar_version" != "$expected_stellar_version" ]]; then
+            echo "Unexpected Stellar CLI version: $stellar_version (expected $expected_stellar_version)" >&2
+            exit 1
+          fi
           bash scripts/release_manifest.sh write-manifest release-artifacts \
             "$RELEASE_COMMIT" "$RELEASE_TAG" "$rust_toolchain" "$stellar_version"
           bash scripts/release_manifest.sh check-release-assets release-artifacts
