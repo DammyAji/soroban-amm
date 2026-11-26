@@ -113,8 +113,7 @@ impl ClPoolState {
 
         while amount_remaining > 0 {
             if limit != 0
-                && ((zero_for_one && sqrt_price <= limit)
-                    || (!zero_for_one && sqrt_price >= limit))
+                && ((zero_for_one && sqrt_price <= limit) || (!zero_for_one && sqrt_price >= limit))
             {
                 break;
             }
@@ -150,11 +149,12 @@ impl ClPoolState {
                 && (hit_limit
                     || sqrt_price <= swap_math::tick_to_sqrt_price_x96(MIN_TICK)
                     || sqrt_price >= swap_math::tick_to_sqrt_price_x96(MAX_TICK)
-                    || next_tick_opt != Some(if zero_for_one {
-                        current_tick
-                    } else {
-                        current_tick + 1
-                    }))
+                    || next_tick_opt
+                        != Some(if zero_for_one {
+                            current_tick
+                        } else {
+                            current_tick + 1
+                        }))
             {
                 break;
             }

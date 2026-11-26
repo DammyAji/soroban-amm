@@ -4288,11 +4288,12 @@ impl ConcentratedLiquidity {
         !hit_limit
             && sqrt_price_x96 > math::MIN_SQRT_PRICE
             && sqrt_price_x96 < math::MAX_SQRT_PRICE
-            && next_tick == Some(if zero_for_one {
-                current_tick
-            } else {
-                current_tick + 1
-            })
+            && next_tick
+                == Some(if zero_for_one {
+                    current_tick
+                } else {
+                    current_tick + 1
+                })
     }
 
     fn step_target_price_and_limit(
@@ -6799,8 +6800,12 @@ mod test_tick_spacing {
         env.mock_all_auths();
         let admin = Address::generate(&env);
         env.budget().reset_unlimited();
-        let token_a = env.register_stellar_asset_contract_v2(admin.clone()).address();
-        let token_b = env.register_stellar_asset_contract_v2(admin.clone()).address();
+        let token_a = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
+        let token_b = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
         let cl_addr = env.register_contract(None, ConcentratedLiquidity);
         let client = ConcentratedLiquidityClient::new(&env, &cl_addr);
 
@@ -6822,19 +6827,16 @@ mod test_tick_spacing {
         env.mock_all_auths();
         let admin = Address::generate(&env);
         env.budget().reset_unlimited();
-        let token_a = env.register_stellar_asset_contract_v2(admin.clone()).address();
-        let token_b = env.register_stellar_asset_contract_v2(admin.clone()).address();
+        let token_a = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
+        let token_b = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
         let cl_addr = env.register_contract(None, ConcentratedLiquidity);
         let client = ConcentratedLiquidityClient::new(&env, &cl_addr);
 
-        let result = client.try_initialize(
-            &admin,
-            &token_a,
-            &token_b,
-            &30_i128,
-            &0_i32,
-            &i32::MAX,
-        );
+        let result = client.try_initialize(&admin, &token_a, &token_b, &30_i128, &0_i32, &i32::MAX);
         assert_eq!(result, Err(Ok(ClError::InvalidTickSpacing)));
     }
 
@@ -8688,7 +8690,10 @@ mod test_single_token_deposit {
         );
 
         assert_eq!(nft.owner_of(&0_u64), alice);
-        assert_eq!(client.position_token_id(&alice, &-100_i32, &100_i32), Some(0_u64));
+        assert_eq!(
+            client.position_token_id(&alice, &-100_i32, &100_i32),
+            Some(0_u64)
+        );
     }
 
     #[test]
