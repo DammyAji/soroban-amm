@@ -269,9 +269,14 @@ The release workflow uses only that version's section as the GitHub release
 body; it does not modify or upload a temporary changelog.
 
 After the PR is merged, create and push a `v*` tag on the merged commit. The
-workflow confirms that commit is reachable from `main`, builds with the pinned
-Rust toolchain and locked Cargo dependencies, runs the Rust and ABI/documentation
-gates, and checks the exact deployable WASM set. It then creates a draft release,
+workflow confirms that commit is reachable from `main`, checks Stellar CLI and
+Node version pins, event schemas, and JS/TS module reachability, builds with the
+pinned Rust toolchain and locked Cargo dependencies, runs the Rust gates
+(workspace tests, upgrade tests, benchmarks, clippy, rustfmt, rustdoc),
+documentation/contract checks (error docs, storage keys, deploy scripts,
+test-module compilation, ABI check and fixture tests, documented contract
+commands and fixture tests, WASM size limits, and release manifest tests), and
+verifies the exact deployable WASM set. It then creates a draft release,
 downloads and verifies the draft assets, and runs the testnet e2e smoke suite
 against those downloaded WASM files. The release is published only if the smoke
 test passes. The published assets include the contract WASM files,
