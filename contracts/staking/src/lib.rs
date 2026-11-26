@@ -1614,8 +1614,6 @@ impl Staking {
     /// running go straight to or out of the new registry; an entry whose
     /// balance is already zero is skipped. Returns the number of legacy entries
     /// not yet processed (0 once finished or when there is nothing to migrate).
-    /// A versioned progress event reports `(offset, processed, remaining)` on
-    /// every successful call.
     pub fn migrate_staker_index(env: Env, offset: u32, limit: u32) -> Result<u32, StakingError> {
         Self::extend_instance_ttl(&env);
         if limit == 0 || limit > MAX_BATCH_SIZE {
@@ -1660,6 +1658,9 @@ impl Staking {
             i += 1;
         }
 
+        // Every successful page reports `(offset, processed, remaining)` so an
+        // indexer can follow the migration. This note lives here rather than in
+        // the rustdoc above, which already fills the contract spec's doc limit.
         soroban_amm_sdk::emit_versioned_event!(
             env,
             (Symbol::new(&env, "staker_index_migration_progress"),),
@@ -5638,6 +5639,7 @@ mod tests {
 
     #[test]
     fn test_migrate_staker_index_is_a_noop_without_a_legacy_vector() {
+        use soroban_sdk::TryFromVal;
         let env = Env::default();
         env.mock_all_auths();
         let (_admin, _s, staking) = setup(&env);
@@ -5791,6 +5793,7 @@ mod tests {
 
     #[test]
     fn test_register_existing_stakers_uses_the_registry_and_stays_idempotent() {
+        use soroban_sdk::TryFromVal;
         let env = Env::default();
         env.mock_all_auths();
         let (_admin, _s, staking) = setup(&env);
