@@ -829,6 +829,7 @@ name = "governance"
 version = "0.1.0"
 dependencies = [
  "amm",
+ "cl_position_nft",
  "concentrated_liquidity",
  "proptest",
  "soroban-sdk",

@@ -1284,6 +1284,9 @@ impl Governance {
         if proposal.cancelled {
             return Err(GovernanceError::ProposalCancelled);
         }
+        if proposal.vetoed {
+            return Err(GovernanceError::ProposalVetoed);
+        }
         if env.ledger().timestamp() > proposal.vote_end {
             return Err(GovernanceError::VotingPeriodEnded);
         }
@@ -3044,6 +3047,50 @@ mod tests {
         assert_eq!(data.0, pid);
     }
 
+    fn vetoed_proposal_for_cancellation() -> (Suite, Address, u32) {
+        let s = setup_suite(30);
+        let gov = GovernanceClient::new(&s.env, &s.gov_addr);
+        gov.set_veto_multisig(&Address::generate(&s.env));
+        let proposer = Address::generate(&s.env);
+        mint_lp(&s, &proposer, 1_000);
+
+        let pid = gov.propose(&proposer, &ProposalKind::UpdateFee(99));
+        gov.vote(&proposer, &pid, &Vote::For);
+        let vote_end = gov.get_proposal(&pid).vote_end;
+        s.env.ledger().set_timestamp(vote_end + 1);
+        gov.veto(&pid);
+        (s, proposer, pid)
+    }
+
+    #[test]
+    fn test_cancel_vetoed_proposal_returns_veto_error() {
+        let (s, proposer, pid) = vetoed_proposal_for_cancellation();
+        let gov = GovernanceClient::new(&s.env, &s.gov_addr);
+
+        assert_eq!(
+            gov.try_cancel_proposal(&pid, &proposer),
+            Err(Ok(GovernanceError::ProposalVetoed))
+        );
+        assert!(!gov.get_proposal(&pid).cancelled);
+    }
+
+    #[test]
+    fn test_cancel_vetoed_proposal_preserves_discussion_and_veto_status() {
+        let (s, proposer, pid) = vetoed_proposal_for_cancellation();
+        let gov = GovernanceClient::new(&s.env, &s.gov_addr);
+        assert_eq!(gov.proposal_status(&pid), ProposalStatus::InDiscussion);
+        assert_eq!(
+            gov.try_cancel_proposal(&pid, &proposer),
+            Err(Ok(GovernanceError::ProposalVetoed))
+        );
+
+        let discussion_end = gov.get_veto_audit(&pid).unwrap().discussion_end;
+        s.env.ledger().set_timestamp(discussion_end);
+        assert_eq!(gov.proposal_status(&pid), ProposalStatus::InDiscussion);
+        s.env.ledger().set_timestamp(discussion_end + 1);
+        assert_eq!(gov.proposal_status(&pid), ProposalStatus::Vetoed);
+    }
+
     #[test]
     fn test_veto_window_enforced() {
         let s = setup_suite(30);
@@ -3346,7 +3393,8 @@ mod tests {
         let lp1 = Address::generate(&env);
         token::LpTokenClient::new(&env, &lp_addr).mint(&lp1, &1000);
 
-        let nft_addr = Address::generate(&env);
+        let nft_addr = env.register_contract(None, cl_position_nft::ClPositionNft);
+        cl_position_nft::ClPositionNftClient::new(&env, &nft_addr).initialize(&gov_addr, &cl_addr);
         let pid = gov.propose(
             &lp1,
             &ProposalKind::SetClPositionNft(SetClPositionNftParams {
