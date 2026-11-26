@@ -355,6 +355,11 @@ describe("analytics correctness", () => {
     assert.equal(position.shares, 15);
     assert.equal(position.lowerTick, -10);
     assert.equal(position.upperTick, 10);
+    // The event does not identify the deposited token, so amountUsed must not
+    // be credited to either reserve.
+    const stats = idx.getPoolStats("p1")[0];
+    assert.equal(stats.reserveA, 0);
+    assert.equal(stats.reserveB, 0);
   });
 
   it("applies positive mod_pos liquidity and reserve deltas", () => {

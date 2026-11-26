@@ -525,6 +525,11 @@ export class RpcIngester {
         payload["amountB"] = Number(rawPayload[4] ?? 0);
       }
     } else if (eventName === "mint_1t") {
+      // `(lower_tick, upper_tick, liquidity, amount_used, dust)` does not say
+      // which token was deposited: below/above-range mints take A/B by the
+      // pool's tick at mint time, and an in-range mint takes whichever token
+      // the caller chose. amountA/amountB are therefore left unset rather than
+      // guessed, so reserves are not moved by this event (README-INGESTION.md).
       if (topics.length > 1) payload["owner"] = asStr(topics[1]);
       if (Array.isArray(rawPayload)) {
         payload["lowerTick"] = Number(rawPayload[0] ?? 0);
