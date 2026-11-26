@@ -108,8 +108,14 @@ Defined in [contracts/amm-sdk/src/types.rs](../contracts/amm-sdk/src/types.rs) a
 | 20 | `ProposalExpired` | Multisig emergency withdrawal proposal has expired. | Submit a new proposal. |
 | 21 | `NotInitialized` | Pool configuration was read before `initialize`. | Call `initialize` first. |
 | 22 | `PoolDrained` | Pool entered terminal `Drained` state after emergency withdrawal (#1095). | Deploy a new pool; drained pools are permanently retired. |
-| 23 | `QuorumNotMet` | Multisig emergency withdrawal approvals are below `MultisigQuorum` (#1095). | Collect enough signer approvals before executing. |
-| 24 | `NoPendingProposal` | `exec_multisig_emergency_wd` called with no active multisig proposal (#1095). | Call `propose_emergency_withdraw` first. |
+| 23 | `QuorumNotMet` | Legacy quorum code; no longer returned by the emergency path (see `QuorumNotReached`, #1095). | — |
+| 24 | `NoPendingProposal` | No emergency announcement or multisig proposal to act on: `emergency_withdraw` / `cancel_emergency_withdraw` without an announcement, or a multisig approve/exec with an unknown id or the wrong action (#1095). | Call `announce_emergency_withdraw` or `propose_emergency_withdraw` first and use the returned id. |
+| 25 | `QuorumNotReached` | `exec_multisig_emergency_wd` / `exec_multisig_set_multisig` called with fewer approvals than `MultisigQuorum`. | Collect more approvals with `approve_multisig_proposal`. |
+| 26 | `InvalidQuorum` | `set_multisig` / `propose_set_multisig` given `quorum > signers.len()` or duplicate signers. | Pass `quorum` in `0..=signers.len()` with unique signers. |
+| 27 | `EmergencyDelayNotElapsed` | Emergency withdrawal attempted before the emergency delay elapsed (since the announcement, or since multisig quorum). | Wait for the delay (24 h by default, at most 7 days). |
+| 28 | `InvalidRecipient` | Emergency recipient is the pool or its LP token, or differs from the announced recipient. | Pass the announced recipient, which may be neither the pool nor the LP token. |
+| 29 | `MultisigGuardActive` | `set_multisig` called while a multisig guard is active. | Change the signer set through `propose_set_multisig`. |
+| 30 | `InvalidEmergencyDelay` | `initialize_with_emergency_delay` given a delay above 7 days. | Pass at most `604800` seconds. |
 
 ---
 
