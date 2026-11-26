@@ -123,6 +123,22 @@ const FIXTURES: &[Fixture] = &[
         ],
     },
     Fixture {
+        name: "start on an initialized low-price tick",
+        fee_bps: 30,
+        protocol_fee_bps: 0,
+        tick_spacing: 1,
+        initial_tick: -69_050,
+        positions: &[
+            (-69_060, -69_050, 0, 1_000_000_000),
+            (-69_050, -69_040, 1_000_000_000_000, 0),
+        ],
+        swaps: &[
+            (true, 100_000_000, Some(-69_050)),
+            (true, 100_000_000, None),
+            (false, 1_000_000, None),
+        ],
+    },
+    Fixture {
         name: "low-price ticks around -69_100",
         fee_bps: 30,
         protocol_fee_bps: 0,
@@ -531,10 +547,11 @@ fn collect_fees_after_tick_crossing_matches_contract() {
     let (lp_wide, _) = mint_both(&chain, &mut sim, "wide", -1_000, 1_000, 500_000_000_000, 500_000_000_000);
     let (lp_narrow, _) = mint_both(&chain, &mut sim, "narrow", -200, 200, 300_000_000_000, 300_000_000_000);
 
-    // Cross out of [-200, 200) upward, then cross back down through it.
-    swap_both(&chain, &mut sim, false, 400_000_000_000);
+    // Use enough input, after fees, to cross both edges of the narrow
+    // range: the wide position also contributes liquidity on this path.
+    swap_both(&chain, &mut sim, false, 500_000_000_000);
     assert!(sim.current_tick() >= 200, "expected tick to cross above 200");
-    swap_both(&chain, &mut sim, true, 600_000_000_000);
+    swap_both(&chain, &mut sim, true, 1_200_000_000_000);
     assert!(sim.current_tick() < -200, "expected tick to cross below -200");
 
     let ranges = [(-1_000, 1_000), (-200, 200)];
