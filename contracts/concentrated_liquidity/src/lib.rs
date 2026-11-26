@@ -6,6 +6,8 @@ pub mod math;
 pub mod tick_bitmap;
 
 #[cfg(test)]
+mod guard_tests;
+#[cfg(test)]
 mod tests_quote_parity;
 
 use soroban_sdk::token::Client as TokenClient;
