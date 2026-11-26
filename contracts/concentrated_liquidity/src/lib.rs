@@ -2356,10 +2356,15 @@ impl ConcentratedLiquidity {
                 zero_for_one,
             );
 
-            // A saturated tick can map to the exact current sqrt price. There
-            // is then no trade to execute and crossing it again cannot advance
-            // the walk; leave the remaining amount untouched (issue #1305).
-            if target_price_x96 == sqrt_price_x96 {
+            if target_price_x96 == sqrt_price_x96
+                && !Self::can_cross_at_current_price(
+                    next_tick_opt,
+                    current_tick,
+                    sqrt_price_x96,
+                    zero_for_one,
+                    hit_limit,
+                )
+            {
                 break;
             }
 
@@ -2852,10 +2857,15 @@ impl ConcentratedLiquidity {
                 zero_for_one,
             );
 
-            // A saturated tick can map to the exact current sqrt price. There
-            // is then no trade to execute and crossing it again cannot advance
-            // the walk; leave the remaining amount untouched (issue #1305).
-            if target_price_x96 == sqrt_price_x96 {
+            if target_price_x96 == sqrt_price_x96
+                && !Self::can_cross_at_current_price(
+                    next_tick_opt,
+                    current_tick,
+                    sqrt_price_x96,
+                    zero_for_one,
+                    hit_limit,
+                )
+            {
                 break;
             }
 
@@ -4264,6 +4274,28 @@ impl ConcentratedLiquidity {
         }
     }
 
+    // At a real initialized boundary, price is already at the tick but
+    // liquidity still belongs to the side we started on. Cross the boundary
+    // once without exchanging tokens; the next lookup starts on the other
+    // side. A limit, terminal sentinel, or saturated price is not a crossing.
+    fn can_cross_at_current_price(
+        next_tick: Option<i32>,
+        current_tick: i32,
+        sqrt_price_x96: u128,
+        zero_for_one: bool,
+        hit_limit: bool,
+    ) -> bool {
+        !hit_limit
+            && sqrt_price_x96 > math::MIN_SQRT_PRICE
+            && sqrt_price_x96 < math::MAX_SQRT_PRICE
+            && next_tick
+                == Some(if zero_for_one {
+                    current_tick
+                } else {
+                    current_tick + 1
+                })
+    }
+
     fn step_target_price_and_limit(
         next_price_x96: u128,
         sqrt_price_limit_x96: u128,
@@ -4430,10 +4462,15 @@ impl ConcentratedLiquidity {
                 zero_for_one,
             );
 
-            // A saturated tick can map to the exact current sqrt price. There
-            // is then no trade to execute and crossing it again cannot advance
-            // the walk; leave the remaining amount untouched (issue #1305).
-            if target_price_x96 == sqrt_price_x96 {
+            if target_price_x96 == sqrt_price_x96
+                && !Self::can_cross_at_current_price(
+                    next_tick_opt,
+                    current_tick,
+                    sqrt_price_x96,
+                    zero_for_one,
+                    hit_limit,
+                )
+            {
                 break;
             }
 
@@ -6763,8 +6800,12 @@ mod test_tick_spacing {
         env.mock_all_auths();
         let admin = Address::generate(&env);
         env.budget().reset_unlimited();
-        let token_a = env.register_stellar_asset_contract_v2(admin.clone()).address();
-        let token_b = env.register_stellar_asset_contract_v2(admin.clone()).address();
+        let token_a = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
+        let token_b = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
         let cl_addr = env.register_contract(None, ConcentratedLiquidity);
         let client = ConcentratedLiquidityClient::new(&env, &cl_addr);
 
@@ -6786,19 +6827,16 @@ mod test_tick_spacing {
         env.mock_all_auths();
         let admin = Address::generate(&env);
         env.budget().reset_unlimited();
-        let token_a = env.register_stellar_asset_contract_v2(admin.clone()).address();
-        let token_b = env.register_stellar_asset_contract_v2(admin.clone()).address();
+        let token_a = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
+        let token_b = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
         let cl_addr = env.register_contract(None, ConcentratedLiquidity);
         let client = ConcentratedLiquidityClient::new(&env, &cl_addr);
 
-        let result = client.try_initialize(
-            &admin,
-            &token_a,
-            &token_b,
-            &30_i128,
-            &0_i32,
-            &i32::MAX,
-        );
+        let result = client.try_initialize(&admin, &token_a, &token_b, &30_i128, &0_i32, &i32::MAX);
         assert_eq!(result, Err(Ok(ClError::InvalidTickSpacing)));
     }
 
@@ -8652,7 +8690,10 @@ mod test_single_token_deposit {
         );
 
         assert_eq!(nft.owner_of(&0_u64), alice);
-        assert_eq!(client.position_token_id(&alice, &-100_i32, &100_i32), Some(0_u64));
+        assert_eq!(
+            client.position_token_id(&alice, &-100_i32, &100_i32),
+            Some(0_u64)
+        );
     }
 
     #[test]
@@ -11618,6 +11659,43 @@ mod test_issue_1099_tick_sqrt_price_precision {
         assert_eq!(pool_a_gained, trader_a_spent);
         assert_eq!(trader_b_received, out);
         assert_eq!(pool_b_paid, out);
+    }
+
+    #[test]
+    fn exact_out_enters_initialized_range_at_current_boundary() {
+        let env = Env::default();
+        let tick = -69_050;
+        let (pool, trader, token_a, token_b, client) = setup_low_price_pool(&env, 30, tick, 1);
+        client.mint_position(
+            &trader,
+            &(tick - 10),
+            &tick,
+            &0,
+            &1_000_000_000,
+            &0,
+            &0,
+            &u64::MAX,
+        );
+        let before = client.get_pool_state();
+        assert_eq!(before.active_liquidity, 0);
+
+        let target_out = 50_000;
+        let limit = ConcentratedLiquidity::tick_to_sqrt_price_x96(tick - 10);
+        let quoted_in = client.quote_exact_out(&true, &target_out, &limit);
+        assert!(quoted_in > 0);
+        let token_a = soroban_sdk::token::Client::new(&env, &token_a);
+        let token_b = soroban_sdk::token::Client::new(&env, &token_b);
+        let pool_a = token_a.balance(&pool);
+        let pool_b = token_b.balance(&pool);
+
+        let paid_in =
+            client.swap_exact_out(&trader, &true, &target_out, &limit, &quoted_in, &u64::MAX);
+        let after = client.get_pool_state();
+        assert_eq!(paid_in, quoted_in);
+        assert_eq!(token_a.balance(&pool) - pool_a, paid_in);
+        assert_eq!(pool_b - token_b.balance(&pool), target_out);
+        assert!(after.current_tick < tick);
+        assert!(after.sqrt_price < before.sqrt_price && after.sqrt_price >= limit);
     }
 
     #[test]

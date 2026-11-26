@@ -24662,7 +24662,7 @@
           "doc": "",
           "fields": [
             {
-              "doc": "Last timestamp reported by the source itself",
+              "doc": "Timestamp of the last successfully returned quote, persisted by `get_price`.",
               "name": "last_updated_at",
               "type_": "u64"
             },
