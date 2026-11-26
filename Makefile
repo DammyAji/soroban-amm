@@ -3,6 +3,7 @@
 # file in sync with it rather than the other way around.
 
 WASM_DIR := target/wasm32v1-none/release
+DOC_EXAMPLE_TARGET_DIR ?= target/doc-example
 
 SHELL := bash
 
@@ -52,7 +53,8 @@ test-abi: ## Run ABI generator/checker script tests
 	node --test scripts/check_abi.test.mjs
 
 check-doc-commands: build ## Verify documented contract invokes against built WASM interfaces
-	node scripts/check_doc_commands.mjs $(WASM_DIR)
+	cargo build --locked --release --target wasm32v1-none -p flash_loan_receiver --target-dir "$(DOC_EXAMPLE_TARGET_DIR)"
+	node scripts/check_doc_commands.mjs "$(WASM_DIR)" "$(DOC_EXAMPLE_TARGET_DIR)/wasm32v1-none/release/flash_loan_receiver.wasm"
 
 test-doc-commands: ## Run fixture tests for the documentation command checker
 	node --test scripts/check_doc_commands.test.mjs
