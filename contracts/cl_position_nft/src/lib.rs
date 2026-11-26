@@ -111,6 +111,8 @@ pub struct ClPositionNft;
 
 #[contractimpl]
 impl ClPositionNft {
+    /// Whether `address` is the all-zero Stellar account
+    /// (`GAAAA…WHF`), which no one can sign for.
     fn is_zero_address(env: &Env, address: &Address) -> bool {
         let zero_address = Address::from_string(&soroban_sdk::String::from_str(
             env,
@@ -675,11 +677,7 @@ impl ClPositionNft {
             return Err(NftError::Unauthorized);
         }
 
-        let zero_account = Address::from_string(&soroban_sdk::String::from_str(
-            &env,
-            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
-        ));
-        if approved == zero_account || approved == owner {
+        if Self::is_zero_address(&env, &approved) || approved == owner {
             return Err(NftError::InvalidAddress);
         }
 
@@ -983,11 +981,7 @@ impl ClPositionNft {
             .instance()
             .get(&DataKey::ClPool)
             .ok_or(NftError::Unauthorized)?;
-        let zero_account = Address::from_string(&soroban_sdk::String::from_str(
-            &env,
-            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
-        ));
-        if new_pool == current_pool || new_pool == zero_account {
+        if new_pool == current_pool || Self::is_zero_address(&env, &new_pool) {
             return Err(NftError::InvalidAddress);
         }
         env.storage().instance().set(&DataKey::ClPool, &new_pool);
