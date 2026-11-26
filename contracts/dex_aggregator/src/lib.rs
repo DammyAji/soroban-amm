@@ -119,6 +119,12 @@ pub enum DataKey {
 #[contract]
 pub struct DexAggregator;
 
+// exceeds_price_tolerance relies on 0 <= PRICE_TOLERANCE_BPS <= BPS.
+const _: () = assert!(
+    DexAggregator::PRICE_TOLERANCE_BPS >= 0
+        && DexAggregator::PRICE_TOLERANCE_BPS <= DexAggregator::BPS
+);
+
 #[contractimpl]
 impl DexAggregator {
     pub const DEFAULT_MAX_HOPS: u32 = 4;
@@ -533,6 +539,9 @@ impl DexAggregator {
         quoted_out: i128,
     ) -> bool {
         Self::extend_ttl(&env);
+        if quoted_out < 0 {
+            return false;
+        }
         let max_hops: u32 = env
             .storage()
             .instance()
@@ -542,7 +551,7 @@ impl DexAggregator {
         else {
             return quoted_out == 0;
         };
-        if best.amount_out == 0 {
+        if best.amount_out <= 0 {
             return quoted_out == 0;
         }
         let diff = if best.amount_out >= quoted_out {
@@ -550,8 +559,13 @@ impl DexAggregator {
         } else {
             quoted_out - best.amount_out
         };
-        let observed_bps = diff * Self::BPS / best.amount_out;
-        if observed_bps > Self::PRICE_TOLERANCE_BPS {
+        if Self::exceeds_price_tolerance(diff, best.amount_out) {
+            let observed_bps = diff
+                .checked_mul(Self::BPS)
+                .map(|scaled_diff| {
+                    (scaled_diff / best.amount_out).max(Self::PRICE_TOLERANCE_BPS + 1)
+                })
+                .unwrap_or(i128::MAX);
             soroban_amm_sdk::emit_versioned_event!(
                 &env,
                 (symbol_short!("tol_fail"),),
@@ -992,6 +1006,30 @@ impl DexAggregator {
         vec.push_back(addr);
     }
 
+    /// Whether `diff` deviates from `amount_out` by more than
+    /// `PRICE_TOLERANCE_BPS`, i.e. `diff * BPS > PRICE_TOLERANCE_BPS * amount_out`,
+    /// evaluated without overflowing `i128`. Expects `diff >= 0` and
+    /// `amount_out > 0`.
+    fn exceeds_price_tolerance(diff: i128, amount_out: i128) -> bool {
+        match (
+            diff.checked_mul(Self::BPS),
+            Self::PRICE_TOLERANCE_BPS.checked_mul(amount_out),
+        ) {
+            (Some(scaled_diff), Some(allowed)) => scaled_diff > allowed,
+            // Exactly one product overflowed, so it is the larger side.
+            (None, Some(_)) => true,
+            (Some(_), None) => false,
+            // Both overflowed. Split amount_out = q * BPS + r so the allowed
+            // deviation TOL * q + TOL * r / BPS fits in i128 (TOL <= BPS). Its
+            // floor is exact for the comparison because diff is an integer.
+            (None, None) => {
+                let allowed = Self::PRICE_TOLERANCE_BPS * (amount_out / Self::BPS)
+                    + Self::PRICE_TOLERANCE_BPS * (amount_out % Self::BPS) / Self::BPS;
+                diff > allowed
+            }
+        }
+    }
+
     fn extend_ttl(env: &Env) {
         env.storage().instance().extend_ttl(MIN_TTL, BUMP_TO);
     }
@@ -1107,6 +1145,7 @@ mod tests {
 
         // A bool-returning query must degrade gracefully rather than trap.
         assert!(!agg.is_price_within_tolerance(&a, &b, &100_i128, &1_i128));
+        assert!(agg.is_price_within_tolerance(&a, &b, &100_i128, &0_i128));
     }
 
     #[test]
@@ -1544,6 +1583,56 @@ mod tests {
         ));
 
         assert_eq!(count_events(&v.env, &v.agg, symbol_short!("tol_fail")), 0);
+    }
+
+    #[test]
+    fn test_tolerance_rejects_zero_and_i128_max_without_trapping() {
+        let v = setup_venues();
+        let agg = DexAggregatorClient::new(&v.env, &v.agg);
+        assert!(!agg.is_price_within_tolerance(&v.token_a, &v.token_b, &10_000_i128, &0_i128));
+        assert!(!agg.is_price_within_tolerance(&v.token_a, &v.token_b, &10_000_i128, &i128::MAX));
+    }
+
+    #[test]
+    fn test_tolerance_includes_exact_boundary_and_rejects_one_unit_beyond() {
+        let v = setup_venues();
+        let agg = DexAggregatorClient::new(&v.env, &v.agg);
+        let best = agg.find_best_route(&v.token_a, &v.token_b, &10_000_i128, &2u32);
+        let max_diff = best.amount_out * DexAggregator::PRICE_TOLERANCE_BPS / DexAggregator::BPS;
+        let at_boundary = best.amount_out - max_diff;
+        assert!(agg.is_price_within_tolerance(&v.token_a, &v.token_b, &10_000_i128, &at_boundary));
+        assert!(!agg.is_price_within_tolerance(
+            &v.token_a,
+            &v.token_b,
+            &10_000_i128,
+            &(at_boundary - 1)
+        ));
+    }
+
+    #[test]
+    fn test_exceeds_price_tolerance_matches_cross_multiplied_bound() {
+        let tol = DexAggregator::PRICE_TOLERANCE_BPS;
+        let bps = DexAggregator::BPS;
+        // Small values: the exact boundary passes and one unit beyond fails;
+        // a fractional bound (9_999 * 10 / 10_000 = 9.999) admits 9 but not 10.
+        assert!(!DexAggregator::exceeds_price_tolerance(10, 10_000));
+        assert!(DexAggregator::exceeds_price_tolerance(11, 10_000));
+        assert!(!DexAggregator::exceeds_price_tolerance(9, 9_999));
+        assert!(DexAggregator::exceeds_price_tolerance(10, 9_999));
+        assert!(!DexAggregator::exceeds_price_tolerance(0, 1));
+        assert!(DexAggregator::exceeds_price_tolerance(1, 1));
+
+        // Only diff * BPS overflows: far outside tolerance.
+        assert!(DexAggregator::exceeds_price_tolerance(i128::MAX - 1, 1));
+
+        // Only PRICE_TOLERANCE_BPS * amount_out overflows: well within.
+        assert!(!DexAggregator::exceeds_price_tolerance(1, i128::MAX));
+
+        // Both products overflow: the bound is still exact at i128::MAX.
+        let out = i128::MAX;
+        let allowed = tol * (out / bps) + tol * (out % bps) / bps;
+        assert!(!DexAggregator::exceeds_price_tolerance(allowed, out));
+        assert!(DexAggregator::exceeds_price_tolerance(allowed + 1, out));
     }
 
     #[test]
