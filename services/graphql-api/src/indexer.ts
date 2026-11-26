@@ -267,7 +267,8 @@ export class PoolIndexer {
     };
   }
 
-  setAlertConfig(config: AlertConfig): AlertConfig {
+  /** Validate an alert config without mutating the in-memory map. */
+  validateAlertConfig(config: AlertConfig): AlertConfig {
     if (!isValidMetric(config.metric)) throw new InvalidMetricError(config.metric);
     const threshold = config.metric === "price_deviation" ? config.thresholdBps : config.thresholdValue;
     if (threshold === undefined || !Number.isFinite(threshold)) {
@@ -276,8 +277,17 @@ export class PoolIndexer {
         : `thresholdValue is required for metric "${config.metric}"`);
     }
     if (threshold < 0) throw new InvalidThresholdError("Threshold must be >= 0");
+    return config;
+  }
+
+  /** Apply an already-validated config to the in-memory map. */
+  applyAlertConfig(config: AlertConfig): AlertConfig {
     this.alertConfigs.set(`${config.poolId}:${config.metric}`, config);
     return config;
+  }
+
+  setAlertConfig(config: AlertConfig): AlertConfig {
+    return this.applyAlertConfig(this.validateAlertConfig(config));
   }
 
   removeAlertConfig(poolId: string, metric: string): boolean {
