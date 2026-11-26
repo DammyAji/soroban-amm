@@ -312,12 +312,11 @@ impl TwalConsumer {
     pub fn save_snapshot(env: Env, pool: Address) -> Result<(), TwalError> {
         Self::extend_ttl(&env);
         Self::require_keeper(&env)?;
-        let (cum, pool_ts) = match AmmPoolLiquidityClient::new(&env, &pool)
-            .try_get_liquidity_cumulative()
-        {
-            Ok(Ok(v)) => v,
-            _ => return Err(TwalError::CrossContractCallFailed),
-        };
+        let (cum, pool_ts) =
+            match AmmPoolLiquidityClient::new(&env, &pool).try_get_liquidity_cumulative() {
+                Ok(Ok(v)) => v,
+                _ => return Err(TwalError::CrossContractCallFailed),
+            };
         Self::register_tracked_pool(&env, &pool, PoolType::Amm)?;
         Self::record_snapshot(&env, &pool, cum, pool_ts);
         Ok(())
