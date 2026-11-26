@@ -134,14 +134,27 @@ pub struct SdkPoolInfo {
 /// change their code.
 pub type PoolInfo = SdkPoolInfo;
 
-#[contracttype]
+// ── Emergency, circuit-breaker and multisig views (#1390) ─────────────────────
+//
+// These mirror the `amm` contract's own types field for field, so they decode
+// the values its entry points return. They are `export = false`: every
+// contract in the workspace links this crate (for `emit_versioned_event!`), and
+// an exported spec entry would add these types to each contract's WASM and
+// ABI, and give the `amm` WASM two specs of the same name, which breaks
+// `contractimport!` of it (as in `amm-fuzz`).
+
+/// A pending single-admin emergency withdrawal, as `get_emergency_announcement`
+/// returns it.
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EmergencyAnnouncement {
     pub to: Address,
     pub announced_at: u64,
 }
 
-#[contracttype]
+/// Circuit-breaker configuration and state, as `get_circuit_breaker_config`
+/// returns it.
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircuitBreakerConfig {
     pub threshold_bps: i128,
@@ -150,21 +163,24 @@ pub struct CircuitBreakerConfig {
     pub tripped: bool,
 }
 
-#[contracttype]
+/// Multisig signer set and quorum, as `get_multisig_config` returns it.
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultisigConfig {
     pub signers: Vec<Address>,
     pub quorum: u32,
 }
 
-#[contracttype]
+/// What a multisig proposal does once executed.
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum MultisigAction {
     EmergencyWithdraw(Address),
     SetMultisig(Vec<Address>, u32),
 }
 
-#[contracttype]
+/// A multisig proposal, as `get_multisig_proposal` returns it.
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultisigProposal {
     pub action: MultisigAction,

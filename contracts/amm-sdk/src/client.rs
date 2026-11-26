@@ -101,6 +101,7 @@ pub trait AmmPoolInterface {
         deadline: u64,
     ) -> Result<i128, SdkAmmError>;
 
+    #[allow(clippy::too_many_arguments)]
     fn add_liquidity_fot(
         env: Env,
         provider: Address,
@@ -130,6 +131,7 @@ pub trait AmmPoolInterface {
         deadline: u64,
     ) -> Result<i128, SdkAmmError>;
 
+    #[allow(clippy::too_many_arguments)]
     fn swap_fot(
         env: Env,
         trader: Address,
@@ -645,6 +647,7 @@ impl<'a> AmmPoolSdk<'a> {
     }
 
     /// Execute a fee-on-transfer swap.
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_swap_fot(
         &self,
         trader: &Address,
@@ -667,6 +670,7 @@ impl<'a> AmmPoolSdk<'a> {
     }
 
     /// Add liquidity from fee-on-transfer tokens.
+    #[allow(clippy::too_many_arguments)]
     pub fn add_liquidity_fot(
         &self,
         provider: &Address,
