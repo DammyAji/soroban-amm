@@ -391,7 +391,7 @@ function toPricePoint(row: SqlRow): PricePoint {
 function toAlertConfig(row: SqlRow): AlertConfig {
   return {
     poolId: String(row["pool_id"]), metric: String(row["metric"]),
-    comparison: String(row["comparison"] ?? "above") as "above" | "below",
+    comparison: row["comparison"] === "below" ? "below" : "above",
     thresholdBps: nullableNumber(row, "threshold_bps") ?? undefined,
     thresholdValue: nullableNumber(row, "threshold_value") ?? undefined,
   };

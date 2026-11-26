@@ -237,16 +237,23 @@ describe("health alerts", () => {
     }));
     assert.equal(above.getPoolHealth("p1")!.alertsFired.length, 1);
 
-    const below = makeIndexer();
-    below.setAlertConfig({
-      poolId: "p1", metric: "price_deviation", comparison: "below", thresholdBps: 3000,
-    });
-    below.indexEvent(swapEvent({ id: "below-dev-1", poolId: "p1" }));
-    below.indexEvent(swapEvent({
-      id: "below-dev-2", poolId: "p1",
-      payload: { amountIn: 500, amountOut: 1000, fee: 5, token_in: "XLM", token_out: "USDC" },
-    }));
-    assert.equal(below.getPoolHealth("p1")!.alertsFired.length, 1);
+    // The first swap has no price history, so its deviation is 0 and any
+    // "below" config fires on it; only the second swap (2500 bps) is compared.
+    const secondSwapAlerts = (thresholdBps: number) => {
+      const below = makeIndexer();
+      below.setAlertConfig({ poolId: "p1", metric: "price_deviation", comparison: "below", thresholdBps });
+      below.indexEvent(swapEvent({ id: "below-dev-1", poolId: "p1" }));
+      const before = below.getPoolHealth("p1")!.alertsFired.length;
+      below.indexEvent(swapEvent({
+        id: "below-dev-2", poolId: "p1",
+        payload: { amountIn: 500, amountOut: 1000, fee: 5, token_in: "XLM", token_out: "USDC" },
+      }));
+      return below.getPoolHealth("p1")!.alertsFired.slice(before);
+    };
+    const fired = secondSwapAlerts(3000);
+    assert.equal(fired.length, 1);
+    assert.equal(fired[0].currentValue, 2500);
+    assert.deepEqual(secondSwapAlerts(2000), []);
   });
 
   it("does not fire a TVL alert while TVL is null", () => {

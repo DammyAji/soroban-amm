@@ -388,8 +388,9 @@ export class PoolIndexer {
       const currentValue = config.metric === "price_deviation" ? stats.priceDeviationBps
         : config.metric === "tvl" ? stats.tvl : stats.volume24h;
       const threshold = config.metric === "price_deviation" ? config.thresholdBps! : config.thresholdValue!;
-      const crossed = config.comparison === "below" ? currentValue !== null && currentValue < threshold
-        : currentValue !== null && currentValue > threshold;
+      // A null metric (e.g. TVL without token prices) never fires.
+      if (currentValue === null) continue;
+      const crossed = config.comparison === "below" ? currentValue < threshold : currentValue > threshold;
       if (crossed) {
         const alert = { poolId, metric: config.metric, threshold, currentValue, firedAt: this.clock() };
         fired.push(alert);
