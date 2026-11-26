@@ -223,7 +223,7 @@ fn test_already_cancelled_order_cannot_be_cancelled_again() {
 }
 
 #[test]
-fn test_settled_order_cannot_be_cancelled_again() {
+fn test_unfillable_order_refunded_at_settlement_cannot_be_cancelled() {
     let fixture = setup();
     let trader = funded_trader(&fixture);
     let order_id = submit_amm(
