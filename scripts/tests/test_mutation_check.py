@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -420,12 +421,20 @@ class RunCommandTests(unittest.TestCase):
         grandchild = int(raised.exception.output.split()[0])
 
         def alive(pid):
+            # The process can exit between open() and read(); on Linux that
+            # read raises ProcessLookupError rather than FileNotFoundError.
             try:
                 status = Path(f"/proc/{pid}/status").read_text()
-            except FileNotFoundError:
+            except (FileNotFoundError, ProcessLookupError):
                 return False
             return "\nState:\tZ" not in status
 
+        # SIGKILL delivery is asynchronous, so give the kernel a moment to
+        # reap the grandchild. A process group that was never killed keeps
+        # `sleep 60` running well past this deadline, so the check still fails.
+        deadline = time.monotonic() + 5
+        while alive(grandchild) and time.monotonic() < deadline:
+            time.sleep(0.05)
         self.assertFalse(alive(grandchild))
 
     def test_returns_completed_process(self):
