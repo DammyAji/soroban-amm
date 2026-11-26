@@ -29842,6 +29842,11 @@
               "doc": "`accept_admin` was called without a pending nomination.",
               "name": "NoPendingAdmin",
               "value": 12
+            },
+            {
+              "doc": "A hop pool rejected a swap or quote call (e.g. paused, empty reserves,\\nor another pool-level error).",
+              "name": "PoolCallFailed",
+              "value": 13
             }
           ],
           "doc": "Errors surfaced by the router.\\n\\nEvery caller-triggerable failure path returns one of these discriminants\\ninstead of trapping, so integrators can branch on the specific reason a\\nmulti-hop route failed. Discriminants 1 and 2 follow the workspace-wide\\nconvention (`AlreadyInitialized` / `NotInitialized`); see\\n`contracts/amm/src/lib.rs` `AmmError` for the reference enum.",
