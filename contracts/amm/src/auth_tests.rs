@@ -1,5 +1,6 @@
-//! Regression tests that every privileged `AmmPool` entrypoint demands a
-//! signature from the right address.
+//! Regression tests that every privileged `AmmPool` entrypoint, and every
+//! fund-moving user entrypoint (#1295), demands a signature from the right
+//! address.
 //!
 //! Each test drives one entrypoint through [`assert_requires_auth`], which
 //! checks that the call is rejected with `Error(Auth, InvalidAction)` when
@@ -13,8 +14,8 @@ extern crate std;
 use super::*;
 use crate::tests::{seed_pool, setup_pool};
 use soroban_sdk::{
-    testutils::{Address as _, Ledger, MockAuth, MockAuthInvoke},
-    Address, Env, IntoVal, Symbol, Val,
+    testutils::{Address as _, AuthorizedFunction, Ledger, MockAuth, MockAuthInvoke},
+    Address, Env, IntoVal, Symbol, Val, Vec,
 };
 
 #[cfg(feature = "testutils")]
@@ -67,14 +68,17 @@ fn assert_auth_err(env: &Env, invoke: &MockAuthInvoke, context: &str) {
 /// 2. Only a stranger's authorization -> `Error(Auth, InvalidAction)`.
 /// 3. Only `signer_expected`'s authorization -> succeeds.
 fn assert_requires_auth(env: &Env, signer_expected: &Address, invoke: &MockAuthInvoke) {
-    assert_requires_auth_with_rejection_check(env, signer_expected, invoke, || {});
+    assert_requires_auth_with_checks(env, signer_expected, invoke, || {}, || {});
 }
 
-fn assert_requires_auth_with_rejection_check(
+/// [`assert_requires_auth`], additionally running `check_rejected_state`
+/// after each rejected call and `check_success` after the authorized one.
+fn assert_requires_auth_with_checks(
     env: &Env,
     signer_expected: &Address,
     invoke: &MockAuthInvoke,
     mut check_rejected_state: impl FnMut(),
+    check_success: impl FnOnce(),
 ) {
     let stranger = Address::generate(env);
 
@@ -99,6 +103,37 @@ fn assert_requires_auth_with_rejection_check(
             invoke.fn_name, signer_expected, msg
         );
     }
+    check_success();
+}
+
+/// Asserts the last invocation's authorization tree for `signer` is rooted at
+/// `contract.fn_name(args)` itself, not only at a nested token `transfer`.
+///
+/// The fund-moving entrypoints pull tokens from the user, so the token's own
+/// `require_auth` would still reject an unsigned call even if the
+/// entrypoint's `require_auth` were deleted; the rejection legs alone cannot
+/// tell the two apart. Without the entrypoint's check, the mocked tree rooted
+/// at the entrypoint no longer matches and the authorized leg fails, and this
+/// assertion pins the recorded root so the test does not rely on that
+/// matching detail alone.
+fn assert_root_auth(
+    env: &Env,
+    signer: &Address,
+    contract: &Address,
+    fn_name: &str,
+    args: Vec<Val>,
+) {
+    let auths = env.auths();
+    let root = auths
+        .iter()
+        .find(|(addr, _)| addr == signer)
+        .map(|(_, invocation)| invocation.function.clone())
+        .unwrap_or_else(|| panic!("{fn_name}: no authorization recorded for the signer"));
+    assert_eq!(
+        root,
+        AuthorizedFunction::Contract((contract.clone(), Symbol::new(env, fn_name), args)),
+        "{fn_name}: the signer's authorization must be rooted at the entrypoint itself"
+    );
 }
 
 struct Fixture {
@@ -142,25 +177,53 @@ impl Fixture {
         (provider, shares)
     }
 
-    fn check_fund_entrypoint<A: IntoVal<Env, soroban_sdk::Vec<Val>>>(
+    /// Drives a fund-moving entrypoint through [`assert_requires_auth_with_checks`].
+    ///
+    /// `pulls` lists the `(token, amount)` transfers the entrypoint makes from
+    /// `signer` to the pool. Each is a nested `transfer` that itself requires
+    /// `signer`'s authorization, so it is included as a sub-invocation of the
+    /// mocked authorization; without it even the expected signer would be
+    /// rejected. Every rejected attempt must leave the reserves, total shares
+    /// and `share_holder`'s balance unchanged, and the authorized call must
+    /// record its root authorization on the entrypoint itself.
+    fn check_fund_entrypoint<A: IntoVal<Env, Vec<Val>>>(
         &self,
         signer: &Address,
         fn_name: &'static str,
         args: A,
+        pulls: &[(&Address, i128)],
         share_holder: &Address,
     ) {
+        let env = self.env();
+        let pool = &self.ts.amm_addr;
+        let transfers: std::vec::Vec<MockAuthInvoke> = pulls
+            .iter()
+            .map(|(token, amount)| MockAuthInvoke {
+                contract: token,
+                fn_name: "transfer",
+                args: (signer.clone(), pool.clone(), *amount).into_val(env),
+                sub_invokes: &[],
+            })
+            .collect();
+        let args: Vec<Val> = args.into_val(env);
         let invoke = MockAuthInvoke {
-            contract: &self.ts.amm_addr,
+            contract: pool,
             fn_name,
-            args: args.into_val(self.env()),
-            sub_invokes: &[],
+            args: args.clone(),
+            sub_invokes: &transfers,
         };
         let before = self.user_pool_state(share_holder);
-        assert_requires_auth_with_rejection_check(
-            self.env(),
+        assert_requires_auth_with_checks(
+            env,
             signer,
             &invoke,
             || assert_eq!(self.user_pool_state(share_holder), before),
+            || assert_root_auth(env, signer, pool, fn_name, args.clone()),
+        );
+        assert_ne!(
+            self.user_pool_state(share_holder),
+            before,
+            "{fn_name}: the authorized call should have changed pool state"
         );
     }
 
@@ -170,7 +233,7 @@ impl Fixture {
             info.reserve_a,
             info.reserve_b,
             info.total_shares,
-            self.client().shares_of(share_holder).unwrap(),
+            self.client().shares_of(share_holder),
         )
     }
 }
@@ -185,16 +248,12 @@ fn funded_fixture() -> (Fixture, Address, i128) {
 #[test]
 fn test_swap_requires_trader_auth_without_state_change() {
     let (f, trader, _) = funded_fixture();
+    let ta = f.ts.ta_addr.clone();
     f.check_fund_entrypoint(
         &trader,
         "swap",
-        (
-            trader.clone(),
-            f.ts.ta_addr.clone(),
-            1_000_i128,
-            0_i128,
-            u64::MAX,
-        ),
+        (trader.clone(), ta.clone(), 1_000_i128, 0_i128, u64::MAX),
+        &[(&ta, 1_000)],
         &trader,
     );
 }
@@ -202,16 +261,13 @@ fn test_swap_requires_trader_auth_without_state_change() {
 #[test]
 fn test_swap_exact_out_requires_trader_auth_without_state_change() {
     let (f, trader, _) = funded_fixture();
+    let (ta, tb) = (f.ts.ta_addr.clone(), f.ts.tb_addr.clone());
+    let amount_in = f.client().get_amount_in(&tb, &1_000);
     f.check_fund_entrypoint(
         &trader,
         "swap_exact_out",
-        (
-            trader.clone(),
-            f.ts.tb_addr.clone(),
-            1_000_i128,
-            10_000_i128,
-            u64::MAX,
-        ),
+        (trader.clone(), tb, 1_000_i128, 10_000_i128, u64::MAX),
+        &[(&ta, amount_in)],
         &trader,
     );
 }
@@ -219,18 +275,20 @@ fn test_swap_exact_out_requires_trader_auth_without_state_change() {
 #[test]
 fn test_swap_fot_requires_trader_auth_without_state_change() {
     let (f, trader, _) = funded_fixture();
+    let ta = f.ts.ta_addr.clone();
     f.check_fund_entrypoint(
         &trader,
         "swap_fot",
         (
             trader.clone(),
-            f.ts.ta_addr.clone(),
+            ta.clone(),
             1_000_i128,
             0_i128,
             0_i128,
             u64::MAX,
             Option::<Address>::None,
         ),
+        &[(&ta, 1_000)],
         &trader,
     );
 }
@@ -238,16 +296,12 @@ fn test_swap_fot_requires_trader_auth_without_state_change() {
 #[test]
 fn test_add_liquidity_requires_provider_auth_without_state_change() {
     let (f, provider, _) = funded_fixture();
+    let (ta, tb) = (f.ts.ta_addr.clone(), f.ts.tb_addr.clone());
     f.check_fund_entrypoint(
         &provider,
         "add_liquidity",
-        (
-            provider.clone(),
-            1_000_i128,
-            1_000_i128,
-            0_i128,
-            u64::MAX,
-        ),
+        (provider.clone(), 1_000_i128, 1_000_i128, 0_i128, u64::MAX),
+        &[(&ta, 1_000), (&tb, 1_000)],
         &provider,
     );
 }
@@ -255,6 +309,7 @@ fn test_add_liquidity_requires_provider_auth_without_state_change() {
 #[test]
 fn test_add_liquidity_fot_requires_provider_auth_without_state_change() {
     let (f, provider, _) = funded_fixture();
+    let (ta, tb) = (f.ts.ta_addr.clone(), f.ts.tb_addr.clone());
     f.check_fund_entrypoint(
         &provider,
         "add_liquidity_fot",
@@ -267,6 +322,7 @@ fn test_add_liquidity_fot_requires_provider_auth_without_state_change() {
             0_i128,
             u64::MAX,
         ),
+        &[(&ta, 1_000), (&tb, 1_000)],
         &provider,
     );
 }
@@ -277,13 +333,8 @@ fn test_remove_liquidity_requires_provider_auth_without_state_change() {
     f.check_fund_entrypoint(
         &provider,
         "remove_liquidity",
-        (
-            provider.clone(),
-            shares / 10,
-            0_i128,
-            0_i128,
-            u64::MAX,
-        ),
+        (provider.clone(), shares / 10, 0_i128, 0_i128, u64::MAX),
+        &[],
         &provider,
     );
 }
@@ -301,6 +352,7 @@ fn test_remove_liquidity_one_sided_requires_provider_auth_without_state_change()
             0_i128,
             u64::MAX,
         ),
+        &[],
         &provider,
     );
 }
