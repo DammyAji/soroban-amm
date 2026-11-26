@@ -10618,7 +10618,7 @@
             },
             {
               "tuple_v0": {
-                "doc": "`u128` presence bitmap of the non-empty `TickBitmap` words in one fixed\\n128-word page (page `p` covers words `-6932 + 128p ..= -6932 + 128p + 127`).",
+                "doc": "`u128` presence bitmap of non-empty `TickBitmap` words in one page.",
                 "name": "TickBitmapIndexPage",
                 "type_": [
                   "i32"
@@ -10627,25 +10627,25 @@
             },
             {
               "void_v0": {
-                "doc": "Instance `u128` presence bitmap of the non-empty `TickBitmapIndexPage`\\nentries. Absent means no page is populated.",
+                "doc": "Instance `u128` bitmap of non-empty index pages; absent means none.",
                 "name": "TickBitmapIndexRoot"
               }
             },
             {
               "void_v0": {
-                "doc": "Instance flag: the paged index is authoritative. Set by `initialize`, or\\nby `migrate_tick_bitmap_index` once a legacy pool has been migrated.",
+                "doc": "Instance flag: the paged index is authoritative.",
                 "name": "TickBitmapIndexMigrated"
               }
             },
             {
               "void_v0": {
-                "doc": "Legacy sorted `Vec<i32>` of non-empty word positions, used only by pools\\nupgraded from the pre-paged index until `migrate_tick_bitmap_index`\\nfinishes and removes it.",
+                "doc": "Legacy sorted word index, kept only until a pool is migrated.",
                 "name": "TickBitmapWords"
               }
             },
             {
               "void_v0": {
-                "doc": "Instance `i32`: legacy words below this position have been copied into\\nthe paged index by an in-progress `migrate_tick_bitmap_index`.",
+                "doc": "Instance cursor of an in-progress `migrate_tick_bitmap_index`.",
                 "name": "TickBitmapIndexCursor"
               }
             },
@@ -12208,7 +12208,7 @@
       },
       {
         "function_v0": {
-          "doc": "Copy a bounded batch of the legacy sorted `TickBitmapWords` index into\\nthe paged tick-bitmap index (#1311). Permissionless: it only rebuilds a\\nderived index from the pool's own state.\\n\\nPools initialized by this version never need it. A pool upgraded from\\nthe sorted-vector index keeps using (and maintaining) that vector for\\nswaps and mints until this has been called enough times to return 0.\\nEach call migrates at most `max_words` legacy words, in ascending order,\\nand writes each touched index page once, stopping early after 16 pages\\nso its ledger footprint stays small.\\nWords added or removed between batches are mirrored into the paged\\nindex when the batch cursor has already passed them. Once the last word\\nis copied the legacy vector is deleted and the paged index takes over.\\n\\nReturns the number of legacy words not yet migrated (0 when finished or\\nwhen there is nothing to migrate).",
+          "doc": "Migrate up to `max_words` words of a legacy `TickBitmapWords` index into\\nthe paged index (#1311); call until it returns 0 (the words left).\\nPermissionless. Pools created by this version never need it.",
           "inputs": [
             {
               "doc": "",

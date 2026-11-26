@@ -189,21 +189,17 @@ pub enum DataKey {
     /// Lets the legacy address-keyed entry points detect a tokenized position
     /// and defer control to the current NFT owner.
     PositionNftToken(Address, i32, i32),
-    /// `u128` presence bitmap of the non-empty `TickBitmap` words in one fixed
-    /// 128-word page (page `p` covers words `-6932 + 128p ..= -6932 + 128p + 127`).
+    // Paged tick-bitmap word index (#1311). Page `p` covers bitmap words
+    // `-6932 + 128p ..= -6932 + 128p + 127`; the root has one bit per page.
+    /// `u128` presence bitmap of non-empty `TickBitmap` words in one page.
     TickBitmapIndexPage(i32),
-    /// Instance `u128` presence bitmap of the non-empty `TickBitmapIndexPage`
-    /// entries. Absent means no page is populated.
+    /// Instance `u128` bitmap of non-empty index pages; absent means none.
     TickBitmapIndexRoot,
-    /// Instance flag: the paged index is authoritative. Set by `initialize`, or
-    /// by `migrate_tick_bitmap_index` once a legacy pool has been migrated.
+    /// Instance flag: the paged index is authoritative.
     TickBitmapIndexMigrated,
-    /// Legacy sorted `Vec<i32>` of non-empty word positions, used only by pools
-    /// upgraded from the pre-paged index until `migrate_tick_bitmap_index`
-    /// finishes and removes it.
+    /// Legacy sorted word index, kept only until a pool is migrated.
     TickBitmapWords,
-    /// Instance `i32`: legacy words below this position have been copied into
-    /// the paged index by an in-progress `migrate_tick_bitmap_index`.
+    /// Instance cursor of an in-progress `migrate_tick_bitmap_index`.
     TickBitmapIndexCursor,
     /// Persistent ring-buffer slot `0..cardinality` holding an [`OracleObservation`] (#1101).
     OracleObservation(u32),
@@ -2214,22 +2210,16 @@ impl ConcentratedLiquidity {
         Self::next_initialized_tick(&env, tick, true)
     }
 
-    /// Copy a bounded batch of the legacy sorted `TickBitmapWords` index into
-    /// the paged tick-bitmap index (#1311). Permissionless: it only rebuilds a
-    /// derived index from the pool's own state.
-    ///
-    /// Pools initialized by this version never need it. A pool upgraded from
-    /// the sorted-vector index keeps using (and maintaining) that vector for
-    /// swaps and mints until this has been called enough times to return 0.
-    /// Each call migrates at most `max_words` legacy words, in ascending order,
-    /// and writes each touched index page once, stopping early after 16 pages
-    /// so its ledger footprint stays small.
-    /// Words added or removed between batches are mirrored into the paged
-    /// index when the batch cursor has already passed them. Once the last word
-    /// is copied the legacy vector is deleted and the paged index takes over.
-    ///
-    /// Returns the number of legacy words not yet migrated (0 when finished or
-    /// when there is nothing to migrate).
+    /// Migrate up to `max_words` words of a legacy `TickBitmapWords` index into
+    /// the paged index (#1311); call until it returns 0 (the words left).
+    /// Permissionless. Pools created by this version never need it.
+    //
+    // Until migration finishes, an upgraded pool keeps using and maintaining
+    // the legacy vector. Each batch copies words in ascending order, writes
+    // each touched page once and stops after BITMAP_INDEX_MIGRATION_MAX_PAGES
+    // pages, then stores the next word in TickBitmapIndexCursor. Words added
+    // or removed below the cursor between batches are mirrored into the paged
+    // index by set_bitmap_word_index. The final batch deletes the vector.
     pub fn migrate_tick_bitmap_index(env: Env, max_words: u32) -> Result<u32, ClError> {
         Self::extend_instance_ttl(&env);
         Self::read_admin(&env)?;
@@ -4387,51 +4377,32 @@ impl ConcentratedLiquidity {
         Self::set_bitmap_word(env, word_pos, new_word);
     }
 
+    /// `zero_for_one`: the highest initialized tick at or below `tick`;
+    /// otherwise the lowest initialized tick strictly above it.
     fn next_initialized_tick(env: &Env, tick: i32, zero_for_one: bool) -> Option<i32> {
-        if zero_for_one {
-            let word_pos = tick.div_euclid(128);
-            let bit_pos = tick.rem_euclid(128) as u32;
-            let word = Self::get_bitmap_word(env, word_pos);
-            let mask = if bit_pos == 127 {
-                u128::MAX
-            } else {
-                (1u128 << (bit_pos + 1)) - 1
-            };
-            let masked = word & mask;
-            if masked != 0 {
-                let bit = 127 - masked.leading_zeros();
-                return Some(word_pos * 128 + bit as i32);
-            }
-
-            if let Some(next_word_pos) = Self::next_indexed_word(env, word_pos, true) {
-                let next_word = Self::get_bitmap_word(env, next_word_pos);
-                if next_word != 0 {
-                    let bit = 127 - next_word.leading_zeros();
-                    return Some(next_word_pos * 128 + bit as i32);
-                }
-            }
-            None
+        // Search the word holding the start tick, from just past the start
+        // bit, then jump to the nearest non-empty word through the index.
+        let (start, pos_offset) = if zero_for_one {
+            (tick, 1)
         } else {
-            let start_tick = tick + 1;
-            let word_pos = start_tick.div_euclid(128);
-            let bit_pos = start_tick.rem_euclid(128) as u32;
-            let word = Self::get_bitmap_word(env, word_pos);
-            let mask = u128::MAX.wrapping_shl(bit_pos);
-            let masked = word & mask;
-            if masked != 0 {
-                let bit = masked.trailing_zeros();
-                return Some(word_pos * 128 + bit as i32);
-            }
-
-            if let Some(next_word_pos) = Self::next_indexed_word(env, word_pos, false) {
-                let next_word = Self::get_bitmap_word(env, next_word_pos);
-                if next_word != 0 {
-                    let bit = next_word.trailing_zeros();
-                    return Some(next_word_pos * 128 + bit as i32);
-                }
-            }
-            None
+            (tick + 1, -1)
+        };
+        let word_pos = start.div_euclid(128);
+        let pos = start.rem_euclid(128) + pos_offset;
+        if let Some(bit) =
+            Self::nearest_set_bit(Self::get_bitmap_word(env, word_pos), pos, zero_for_one)
+        {
+            return Some(word_pos * 128 + bit);
         }
+
+        let next_word_pos = Self::next_indexed_word(env, word_pos, zero_for_one)?;
+        let whole_word = if zero_for_one { 128 } else { -1 };
+        let bit = Self::nearest_set_bit(
+            Self::get_bitmap_word(env, next_word_pos),
+            whole_word,
+            zero_for_one,
+        )?;
+        Some(next_word_pos * 128 + bit)
     }
 
     /// Nearest indexed (non-empty) bitmap word strictly below (`previous`) or
@@ -4458,65 +4429,41 @@ impl ConcentratedLiquidity {
         }
     }
 
+    /// Position of the nearest set bit of `bits` strictly below (`previous`)
+    /// or strictly above `pos`. `pos` may be 128 or -1 to search the whole word.
+    fn nearest_set_bit(bits: u128, pos: i32, previous: bool) -> Option<i32> {
+        let masked = if previous {
+            bits & u128::MAX.checked_shr(128 - pos as u32).unwrap_or(0)
+        } else {
+            bits & u128::MAX.checked_shl((pos + 1) as u32).unwrap_or(0)
+        };
+        if masked == 0 {
+            None
+        } else if previous {
+            Some(127 - masked.leading_zeros() as i32)
+        } else {
+            Some(masked.trailing_zeros() as i32)
+        }
+    }
+
     fn next_bitmap_word_index(env: &Env, word_pos: i32, previous: bool) -> Option<i32> {
         let offset = Self::bitmap_word_offset(word_pos)?;
-        let page = offset / BITMAP_INDEX_PAGE_BITS;
-        let bit_pos = offset % BITMAP_INDEX_PAGE_BITS;
-
-        let page_bits = Self::read_bitmap_index_page(env, page);
-        let page_mask = if previous {
-            if bit_pos == 0 {
-                0
-            } else {
-                (1u128 << bit_pos) - 1
-            }
-        } else if bit_pos == 127 {
-            0
-        } else {
-            u128::MAX.wrapping_shl((bit_pos + 1) as u32)
-        };
-        let matching_words = page_bits & page_mask;
-        if matching_words != 0 {
-            let bit = if previous {
-                127 - matching_words.leading_zeros()
-            } else {
-                matching_words.trailing_zeros()
-            };
-            return Some(MIN_BITMAP_WORD_POS + page * BITMAP_INDEX_PAGE_BITS + bit as i32);
+        let mut page = offset / BITMAP_INDEX_PAGE_BITS;
+        let mut bit = Self::nearest_set_bit(
+            Self::read_bitmap_index_page(env, page),
+            offset % BITMAP_INDEX_PAGE_BITS,
+            previous,
+        );
+        if bit.is_none() {
+            page = Self::nearest_set_bit(Self::read_bitmap_index_root(env), page, previous)?;
+            let whole_page = if previous { BITMAP_INDEX_PAGE_BITS } else { -1 };
+            bit = Self::nearest_set_bit(
+                Self::read_bitmap_index_page(env, page),
+                whole_page,
+                previous,
+            );
         }
-
-        let root_bits = Self::read_bitmap_index_root(env);
-        let page_mask = if previous {
-            if page == 0 {
-                0
-            } else {
-                (1u128 << page) - 1
-            }
-        } else if page == 127 {
-            0
-        } else {
-            u128::MAX.wrapping_shl((page + 1) as u32)
-        };
-        let matching_pages = root_bits & page_mask;
-        if matching_pages == 0 {
-            return None;
-        }
-
-        let matched_page = if previous {
-            (127 - matching_pages.leading_zeros()) as i32
-        } else {
-            matching_pages.trailing_zeros() as i32
-        };
-        let page_bits = Self::read_bitmap_index_page(env, matched_page);
-        if page_bits == 0 {
-            return None;
-        }
-        let bit = if previous {
-            127 - page_bits.leading_zeros()
-        } else {
-            page_bits.trailing_zeros()
-        };
-        Some(MIN_BITMAP_WORD_POS + matched_page * BITMAP_INDEX_PAGE_BITS + bit as i32)
+        Some(MIN_BITMAP_WORD_POS + page * BITMAP_INDEX_PAGE_BITS + bit?)
     }
 
     fn get_tick(env: &Env, tick: i32) -> TickInfo {
