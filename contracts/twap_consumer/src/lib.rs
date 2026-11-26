@@ -811,8 +811,8 @@ impl TwapConsumer {
     /// retention policy. Returns the number of snapshots removed.
     ///
     /// Removes at most `min(max_to_remove, MAX_PRUNE_PER_CALL)` snapshots
-    /// (see [`Self::MAX_PRUNE_PER_CALL`]), and only ones the retention policy
-    /// or [`Self::MAX_SNAPSHOTS_PER_POOL`] makes eligible, oldest first.
+    /// (see `TwapConsumer::MAX_PRUNE_PER_CALL`), and only ones the retention policy
+    /// or `TwapConsumer::MAX_SNAPSHOTS_PER_POOL` makes eligible, oldest first.
     ///
     /// Requires the keeper's authorization, like `delete_snapshot`: retained
     /// snapshots are the input to every TWAP read, so deleting them is not
@@ -829,9 +829,9 @@ impl TwapConsumer {
     ///
     /// Each pool may have at most
     /// `min(max_to_remove_per_pool, MAX_PRUNE_PER_CALL)` eligible snapshots
-    /// removed per call (see [`Self::MAX_PRUNE_PER_CALL`]), so one call removes
+    /// removed per call (see `TwapConsumer::MAX_PRUNE_PER_CALL`), so one call removes
     /// at most `MAX_PRUNE_PER_CALL * MAX_TRACKED_POOLS` in total. Requires the
-    /// keeper's authorization, like [`Self::prune_snapshots`]. Fault-isolated
+    /// keeper's authorization, like `TwapConsumer::prune_snapshots`. Fault-isolated
     /// so one pool cannot abort the sweep.
     pub fn prune_all(env: Env, max_to_remove_per_pool: u32) -> Result<u32, TwapError> {
         Self::extend_instance_ttl(&env);
