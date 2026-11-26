@@ -145,7 +145,7 @@ fn setup_pool(env: &Env, initial_tick: i32, with_liquidity: bool) -> TestPool<'_
     asset_a.mint(&trader, &INITIAL_MINT_AMOUNT);
     asset_b.mint(&trader, &INITIAL_MINT_AMOUNT);
 
-    let contract_id = env.register(ConcentratedLiquidity, ());
+    let contract_id = env.register_contract(None, ConcentratedLiquidity);
     let client = ConcentratedLiquidityClient::new(env, &contract_id);
     client.initialize(
         &admin,
@@ -328,7 +328,7 @@ fn swap_one_for_zero_min_amount_out_plus_one_fails_and_preserves_state() {
 
 #[test]
 fn swap_zero_for_one_sqrt_price_limit_stops_early_and_enforces_min_out() {
-    let limit_x96 = ConcentratedLiquidity::tick_to_sqrt_price_x96(-100);
+    let limit_x96 = ConcentratedLiquidity::tick_to_sqrt_price_x96(-50);
     let nominal_out = reference_swap_output(true, SWAP_AMOUNT_IN, 0);
     let limited_out = reference_swap_output(true, SWAP_AMOUNT_IN, limit_x96);
     assert!(
@@ -382,7 +382,7 @@ fn swap_zero_for_one_sqrt_price_limit_stops_early_and_enforces_min_out() {
 
 #[test]
 fn swap_one_for_zero_sqrt_price_limit_stops_early_and_enforces_min_out() {
-    let limit_x96 = ConcentratedLiquidity::tick_to_sqrt_price_x96(100);
+    let limit_x96 = ConcentratedLiquidity::tick_to_sqrt_price_x96(50);
     let nominal_out = reference_swap_output(false, SWAP_AMOUNT_IN, 0);
     let limited_out = reference_swap_output(false, SWAP_AMOUNT_IN, limit_x96);
     assert!(
