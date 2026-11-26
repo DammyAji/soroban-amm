@@ -426,6 +426,8 @@ on-wire data shape `(schema_version, payload)`.
 | `rewards_reconciled` | — | `(admin: Address, old_undistributed: i128, old_owed: i128, new_undistributed: i128, new_owed: i128)` |
 | `initialized` | — | `(lp_token: Address, reward_token: Address, admin: Address, min_boost: i128, max_boost: i128, min_lock_duration: u64, max_lock_duration: u64)` |
 | `staker_index_migrated` | — | `(registered: u32)` |
+| `staker_index_backfilled` | — | `(added: u32)` |
+| `staker_index_migration_progress` | — | `(offset: u32, processed: u32, remaining: u32)` |
 | `admin_nominated` | — | `(admin: Address, new_admin: Address)` |
 | `admin_changed` | — | `(new_admin: Address)` |
 | `upgraded` | — | `(new_wasm_hash: BytesN<32>)` |
@@ -448,6 +450,11 @@ front-run initialization is detected.
 
 `staker_index_migrated` (issue #1113) is emitted once, by the last page of
 `migrate_staker_index`, with the number of stakers in the registry.
+
+`staker_index_backfilled` reports the number of newly indexed stakers for each
+`register_existing_stakers` call. `staker_index_migration_progress` reports
+`(offset, processed, remaining)` for each successful migration call. When no
+legacy vector exists, all three progress values are zero.
 
 `admin_nominated`, `admin_changed` and `upgraded` were the last staking events
 published without the leading `schema_version`; as of issue #1114 they go
@@ -923,6 +930,8 @@ count. Events marked unversioned carry their payload without the
 | `claimed` | 1 | `staker`, `pending` | v1 |
 | `initialized` | 1 | `lp_token`, `reward_token`, `admin`, `min_boost`, `max_boost`, `min_lock_duration`, `max_lock_duration` | v1 |
 | `staker_index_migrated` | 1 | `registered` | v1 |
+| `staker_index_backfilled` | 1 | `added` | v1 |
+| `staker_index_migration_progress` | 1 | `offset`, `processed`, `remaining` | v1 |
 
 ### `token`
 

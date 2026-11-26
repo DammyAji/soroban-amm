@@ -2527,6 +2527,28 @@
               "registered"
             ]
           }
+        ],
+        "staker_index_backfilled": [
+          {
+            "version": 1,
+            "topics": 1,
+            "shape": "tuple",
+            "fields": [
+              "added"
+            ]
+          }
+        ],
+        "staker_index_migration_progress": [
+          {
+            "version": 1,
+            "topics": 1,
+            "shape": "tuple",
+            "fields": [
+              "offset",
+              "processed",
+              "remaining"
+            ]
+          }
         ]
       }
     },
