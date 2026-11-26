@@ -133,6 +133,7 @@ make build      # cargo build --release --target wasm32v1-none
 make optimize   # optimize every WASM artifact from `make build` via the Stellar CLI
 make test       # build, then run the workspace test suite (excludes amm_fuzz, matches CI)
 make test-all   # run workspace tests excluding amm_fuzz (matches CI)
+make mutation-check CRATE=amm # check curated authorization and guard mutations
 make fmt        # cargo fmt --all
 make lint       # cargo clippy --all -- -D warnings
 make check-docs # verify docs/error-codes.md matches #[contracterror] enums
@@ -211,6 +212,52 @@ that the audit was skipped. This does not skip the separate CI audit.
 ## Testing
 
 Every behavioral change **must** come with tests.
+
+### Authorization and guard mutations
+
+When adding or changing an authorization check, deadline, slippage bound, or
+similar guard in a contract, run the curated mutation check for that crate:
+
+```bash
+make mutation-check CRATE=amm
+```
+
+This builds the WASM fixtures (`make build`), then runs the crate's unmutated
+library tests as a baseline: if they do not build or do not pass, the check
+stops with an error rather than reporting a meaningless result. It then removes
+or flips one selected guard at a time in the crate's production sources (every
+module reachable from `src/lib.rs`, skipping `#[cfg(test)]` items and test-only
+modules), reruns `cargo test -p <crate> --lib`, and restores the file after
+each mutation, including on timeout and Ctrl-C. A survivor means the tests
+still pass with the guard changed; unaccepted survivors fail the command and
+include the file, line, function and before/after text. Mutations that do not
+compile are counted separately, and a run where no mutation compiles fails.
+The nightly `Curated Mutation Check` workflow runs the selected contracts (in
+parallel shards) and uploads the reports. The local script requires Python
+3.11 or newer.
+
+Pass extra flags with `ARGS`: `ARGS="--list"` prints every mutation and its id
+without running cargo, and `ARGS="--limit 3"` runs only the first three.
+
+An intentional survivor can be exempted in `mutations.toml` under the crate's
+`[crates.<name>]` table. Add its exact reported mutation `id` and a specific
+reason explaining why the survivor is not a coverage gap:
+
+```toml
+[[crates.amm.accepted_survivors]]
+id = "auth:deposit_for:0123abcd45"
+justification = "Removing this user-level auth fails nested token authorization."
+```
+
+Ids have the form `<operator>:<function>:<hash>`. The hash covers the crate,
+file, enclosing function, the mutated line's text (whitespace-normalized) and
+the mutation itself, so edits elsewhere in the file do not change an id, but
+editing the guarded line, renaming its function or moving it to another file
+does. The report lists accepted ids that no longer match any mutation as
+`STALE`; update or remove them.
+
+Do not use an exemption to avoid adding a test for a guard the contract relies
+on. Remove accepted entries when the corresponding tests land.
 
 ### Local artifacts and repository hygiene
 
