@@ -1093,7 +1093,7 @@
       },
       {
         "function_v0": {
-          "doc": "Deposit tokens into the pool and receive LP shares in return.\\n\\nOn the first deposit any ratio is accepted and the initial share supply is\\nset to the geometric mean of the two amounts. Subsequent deposits must\\nmatch the current pool ratio (within integer rounding); excess tokens are\\n**not** refunded automatically \\xe2\\x80\\x94 callers should compute amounts off-chain\\nbefore calling.\\n\\nRequires `provider` to have authorized this call.\\n\\n# Parameters\\n- `provider` \\xe2\\x80\\x93 Address of the liquidity provider funding the deposit.\\n- `amount_a` \\xe2\\x80\\x93 Amount of `token_a` to deposit. Must be positive.\\n- `amount_b` \\xe2\\x80\\x93 Amount of `token_b` to deposit. Must be positive.\\n- `min_shares` \\xe2\\x80\\x93 Minimum number of LP shares the caller is willing to\\nreceive; the transaction panics if fewer would be minted (slippage guard).\\n\\n# Returns\\nThe number of LP shares minted to `provider`.\\n\\n# Panics\\n- If either `amount_a` or `amount_b` is not positive.\\n- If the shares that would be minted are less than `min_shares`.",
+          "doc": "Deposit tokens into the pool and receive LP shares in return.\\n\\nOn the first deposit any ratio is accepted and the initial share supply is\\nset to the geometric mean of the two amounts. For subsequent deposits,\\nonly the amounts backing the minted shares are retained; any excess is\\nrefunded to the provider.\\n\\nRequires `provider` to have authorized this call.\\n\\n# Parameters\\n- `provider` \\xe2\\x80\\x93 Address of the liquidity provider funding the deposit.\\n- `amount_a` \\xe2\\x80\\x93 Amount of `token_a` to deposit. Must be positive.\\n- `amount_b` \\xe2\\x80\\x93 Amount of `token_b` to deposit. Must be positive.\\n- `min_shares` \\xe2\\x80\\x93 Minimum number of LP shares the caller is willing to\\nreceive; the transaction panics if fewer would be minted (slippage guard).\\n\\n# Returns\\nThe number of LP shares minted to `provider`.\\n\\n# Panics\\n- If either `amount_a` or `amount_b` is not positive.\\n- If the shares that would be minted are less than `min_shares`.",
           "inputs": [
             {
               "doc": "",
@@ -1602,7 +1602,7 @@
       },
       {
         "function_v0": {
-          "doc": "Add liquidity with fee-on-transfer (FOT) token support.\\n\\nLike `add_liquidity` but measures the actual token amounts received\\nby the pool via pre/post balance snapshots rather than trusting the\\nnominal `amount_a`/`amount_b` values. LP shares are minted proportional\\nto what the pool actually received.\\n\\n# Parameters\\n- `min_received_a` \\xe2\\x80\\x93 Minimum actual `token_a` the pool must receive.\\n- `min_received_b` \\xe2\\x80\\x93 Minimum actual `token_b` the pool must receive.",
+          "doc": "Add liquidity with fee-on-transfer (FOT) token support.\\n\\nLike `add_liquidity` but measures the actual token amounts received\\nby the pool via pre/post balance snapshots rather than trusting the\\nnominal `amount_a`/`amount_b` values. LP shares are minted proportional\\nto what the pool actually received, and unused received amounts are\\nrefunded to the provider.\\n\\n# Parameters\\n- `min_received_a` \\xe2\\x80\\x93 Minimum actual `token_a` the pool must receive.\\n- `min_received_b` \\xe2\\x80\\x93 Minimum actual `token_b` the pool must receive.",
           "inputs": [
             {
               "doc": "",
