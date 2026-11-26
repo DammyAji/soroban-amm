@@ -203,9 +203,8 @@ a receiver could not tell a fresh event from a replay. To migrate:
 
 - **At least one delivery attempt.** The poller saves each contract's cursor
   only after events in that page have been handed to the dispatcher. Events
-  skipped because a circuit is open, or that cannot be delivered, including
-  while a subscriber's circuit is open, are retained in the dead-letter queue
-  for replay. The queue is bounded and evicts its oldest entries at capacity;
+  that cannot be delivered, including those skipped while a subscriber's
+  circuit is open, are retained in the dead-letter queue for replay. The queue is bounded and evicts its oldest entries at capacity;
   configure persistent `DATA_DIR` storage for dead letters to survive restarts.
   Receivers must deduplicate (see below).
 - Every delivery carries `X-Webhook-Id`, the event id. It is the same on every
