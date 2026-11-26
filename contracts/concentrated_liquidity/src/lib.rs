@@ -481,8 +481,10 @@ impl ConcentratedLiquidity {
             .instance()
             .get(&DataKey::PositionNft)
             .unwrap_or(None);
+        // Detach only once the NFT contract reports no live tokens; an NFT
+        // contract that cannot answer keeps the pool attached (fail closed).
         let tokenized_positions_remain = if nft.is_none() {
-            existing_nft.as_ref().map_or(false, |nft_addr| {
+            existing_nft.as_ref().is_some_and(|nft_addr| {
                 !matches!(
                     PositionNftClient::new(&env, nft_addr).try_total_supply(),
                     Ok(Ok(0))
