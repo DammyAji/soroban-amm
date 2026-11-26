@@ -169,7 +169,7 @@ pub struct CircuitBreakerEvent {
 }
 
 /// Emitted when the LP token's locker is changed.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct LpLockerSetEvent {
     pub lp_token: Address,
@@ -177,7 +177,7 @@ pub struct LpLockerSetEvent {
 }
 
 /// Emitted when an emergency withdrawal is announced.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EmergencyAnnounceEvent {
     pub admin: Address,
@@ -187,7 +187,7 @@ pub struct EmergencyAnnounceEvent {
 }
 
 /// Emitted when a pending emergency withdrawal is cancelled.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EmergencyCancelEvent {
     pub admin: Address,
@@ -195,7 +195,7 @@ pub struct EmergencyCancelEvent {
 }
 
 /// Emitted when an emergency withdrawal transfers the pool reserves.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EmergencyWithdrawEvent {
     pub admin: Address,
@@ -205,14 +205,14 @@ pub struct EmergencyWithdrawEvent {
 }
 
 /// Emitted when an admin or multisig signer clears the pool lock.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ForceUnlockEvent {
     pub timestamp: u64,
 }
 
 /// Emitted when the circuit-breaker configuration changes.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircuitBreakerConfigEvent {
     pub threshold_bps: i128,
@@ -220,7 +220,7 @@ pub struct CircuitBreakerConfigEvent {
 }
 
 /// Emitted when the LP rebate rate changes. The admin is indexed in the topic.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct LpRebateSetEvent {
     pub admin: Address,
@@ -228,7 +228,7 @@ pub struct LpRebateSetEvent {
 }
 
 /// Emitted when the multisig signer set is installed or updated.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultisigSetEvent {
     pub actor: Address,
@@ -236,7 +236,7 @@ pub struct MultisigSetEvent {
 }
 
 /// Emitted when a multisig emergency-withdraw proposal is created.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultisigProposedEvent {
     pub signer: Address,
@@ -245,7 +245,7 @@ pub struct MultisigProposedEvent {
 }
 
 /// Emitted when a multisig signer-set proposal is created.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultisigSetProposedEvent {
     pub signer: Address,
@@ -254,7 +254,7 @@ pub struct MultisigSetProposedEvent {
 }
 
 /// Emitted when a multisig signer approves a proposal.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultisigApprovedEvent {
     pub signer: Address,
@@ -263,7 +263,7 @@ pub struct MultisigApprovedEvent {
 }
 
 /// Emitted when a multisig emergency-withdraw proposal executes.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultisigEmergencyWithdrawEvent {
     pub signer: Address,
@@ -273,7 +273,7 @@ pub struct MultisigEmergencyWithdrawEvent {
 }
 
 /// Emitted when a swap detects a fee-on-transfer token.
-#[contracttype]
+#[contracttype(export = false)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct FotDetectedEvent {
     pub token_in: Address,

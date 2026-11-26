@@ -2181,6 +2181,15 @@
           ]
         },
         {
+          "name": "migrate_tick_bitmap_index",
+          "inputs": [
+            {
+              "name": "max_words",
+              "type": "u32"
+            }
+          ]
+        },
+        {
           "name": "mint_position",
           "inputs": [
             {
