@@ -145,7 +145,7 @@ make size       # print a WASM size report for all built contracts
 make size-check # fail if any contract WASM exceeds the size limit
 make doc        # build workspace docs with warnings denied
 make audit      # run a security audit of dependencies (cargo-audit)
-make check      # fmt + lint + test + check-docs + check-deploy-scripts + size-check + doc (run before pushing)
+make check      # run the local equivalents of CI gates, including the dependency audit
 make bench      # hot-path benchmarks
 make deploy     # deploy contracts via scripts/deploy.sh
 make e2e        # run the end-to-end test suite
@@ -172,8 +172,13 @@ Before opening a PR, run:
 make check
 ```
 
-This is intended to track the same set of checks CI enforces in
-`.github/workflows/ci.yml`, so passing it locally means your PR should pass CI.
+`make check` mirrors the gates in `.github/workflows/ci.yml` that have local
+Make targets. When adding a CI gate that already has a Make target, add that
+target to `check` in the same PR.
+
+The dependency audit runs by default and requires `cargo-audit`. If it is not
+installed locally, `make check SKIP_AUDIT=1` runs the remaining checks and prints
+that the audit was skipped. This does not skip the separate CI audit.
 
 ---
 

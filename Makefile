@@ -6,8 +6,12 @@ WASM_DIR := target/wasm32v1-none/release
 
 SHELL := bash
 
+# Set SKIP_AUDIT=1 to skip the dependency audit in `make check` (e.g. when
+# cargo-audit is not installed locally). The skip is printed, never silent.
+SKIP_AUDIT ?= 0
+
 .PHONY: all help build release-build optimize abi check-abi test-abi test test-all fmt lint lint-js check-node-versions check-stellar-version check check-docs check-branch-protection check-branch-protection-remote check-storage-keys check-deploy-scripts check-test-modules check-reachability check-release-manifest \
-        size size-check doc audit bench deploy e2e clean fuzz-amm fuzz-amm-nightly fuzz-cl
+        size size-check doc audit bench deploy e2e clean fuzz-amm fuzz-amm-nightly fuzz-cl check-doc-commands test-doc-commands
 
 # Bare `make` explains itself instead of building.
 .DEFAULT_GOAL := help
@@ -128,7 +132,10 @@ audit: ## Run a security audit of dependencies (cargo install cargo-audit if mis
 	}
 	cargo audit
 
-check: fmt lint test check-docs check-branch-protection check-stellar-version check-storage-keys check-deploy-scripts check-test-modules check-reachability size-check doc ## Run the checks CI enforces before pushing
+# `check` mirrors the gates in .github/workflows/ci.yml. Fast checks run first.
+# If you add a CI gate that has a make target, add it here in the same PR.
+check: fmt lint check-node-versions check-stellar-version check-abi test-abi check-doc-commands test-doc-commands check-docs check-branch-protection check-storage-keys check-deploy-scripts check-test-modules check-reachability size-check test doc $(if $(filter 0,$(SKIP_AUDIT)),audit) ## Run the checks CI enforces before pushing (SKIP_AUDIT=1 skips audit)
+	@if [ "$(SKIP_AUDIT)" != "0" ]; then echo "note: SKIP_AUDIT=$(SKIP_AUDIT) — dependency audit was skipped"; fi
 
 bench: build ## Run hot-path benchmarks against the optimized pool WASM (what CI measures)
 	@mkdir -p $(WASM_DIR)/optimized
