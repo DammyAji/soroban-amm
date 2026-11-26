@@ -1093,7 +1093,7 @@
       },
       {
         "function_v0": {
-          "doc": "Deposit tokens into the pool and receive LP shares in return.\\n\\nOn the first deposit any ratio is accepted and the initial share supply is\\nset to the geometric mean of the two amounts. Subsequent deposits must\\nmatch the current pool ratio (within integer rounding); excess tokens are\\n**not** refunded automatically \\xe2\\x80\\x94 callers should compute amounts off-chain\\nbefore calling.\\n\\nRequires `provider` to have authorized this call.\\n\\n# Parameters\\n- `provider` \\xe2\\x80\\x93 Address of the liquidity provider funding the deposit.\\n- `amount_a` \\xe2\\x80\\x93 Amount of `token_a` to deposit. Must be positive.\\n- `amount_b` \\xe2\\x80\\x93 Amount of `token_b` to deposit. Must be positive.\\n- `min_shares` \\xe2\\x80\\x93 Minimum number of LP shares the caller is willing to\\nreceive; the transaction panics if fewer would be minted (slippage guard).\\n\\n# Returns\\nThe number of LP shares minted to `provider`.\\n\\n# Panics\\n- If either `amount_a` or `amount_b` is not positive.\\n- If the shares that would be minted are less than `min_shares`.",
+          "doc": "Deposit tokens into the pool and receive LP shares in return.\\n\\nOn the first deposit any ratio is accepted and the initial share supply is\\nset to the geometric mean of the two amounts. For subsequent deposits,\\nonly the amounts backing the minted shares are retained; any excess is\\nrefunded to the provider.\\n\\nRequires `provider` to have authorized this call.\\n\\n# Parameters\\n- `provider` \\xe2\\x80\\x93 Address of the liquidity provider funding the deposit.\\n- `amount_a` \\xe2\\x80\\x93 Amount of `token_a` to deposit. Must be positive.\\n- `amount_b` \\xe2\\x80\\x93 Amount of `token_b` to deposit. Must be positive.\\n- `min_shares` \\xe2\\x80\\x93 Minimum number of LP shares the caller is willing to\\nreceive; the transaction panics if fewer would be minted (slippage guard).\\n\\n# Returns\\nThe number of LP shares minted to `provider`.\\n\\n# Panics\\n- If either `amount_a` or `amount_b` is not positive.\\n- If the shares that would be minted are less than `min_shares`.",
           "inputs": [
             {
               "doc": "",
@@ -1602,7 +1602,7 @@
       },
       {
         "function_v0": {
-          "doc": "Add liquidity with fee-on-transfer (FOT) token support.\\n\\nLike `add_liquidity` but measures the actual token amounts received\\nby the pool via pre/post balance snapshots rather than trusting the\\nnominal `amount_a`/`amount_b` values. LP shares are minted proportional\\nto what the pool actually received.\\n\\n# Parameters\\n- `min_received_a` \\xe2\\x80\\x93 Minimum actual `token_a` the pool must receive.\\n- `min_received_b` \\xe2\\x80\\x93 Minimum actual `token_b` the pool must receive.",
+          "doc": "Add liquidity with fee-on-transfer (FOT) token support.\\n\\nLike `add_liquidity` but measures the actual token amounts received\\nby the pool via pre/post balance snapshots rather than trusting the\\nnominal `amount_a`/`amount_b` values. LP shares are minted proportional\\nto what the pool actually received, and unused received amounts are\\nrefunded to the provider.\\n\\n# Parameters\\n- `min_received_a` \\xe2\\x80\\x93 Minimum actual `token_a` the pool must receive.\\n- `min_received_b` \\xe2\\x80\\x93 Minimum actual `token_b` the pool must receive.",
           "inputs": [
             {
               "doc": "",
@@ -6275,7 +6275,7 @@
       },
       {
         "function_v0": {
-          "doc": "Initialize the router with its admin and the factory that tracks all\\ndeployed pools.\\n\\n# Deployment window\\n\\n`initialize` is one-shot but deliberately does not call\\n`admin.require_auth()`: an attacker could authorize their own address,\\nso it would not stop a front-run, and it would break deployments whose\\nadmin is a contract that cannot sign for itself. Deployers must read\\nback `get_admin` and `get_factory` right after deployment (the deploy\\nscript does) and redeploy if either differs from the intended value.",
+          "doc": "Initialize the router with its admin and the factory that tracks all\\ndeployed pools.\\n\\n# Deployment window\\n\\n`initialize` is one-shot but deliberately does not call\\n`admin.require_auth()`: an attacker could authorize their own address,\\nso it would not stop a front-run, and it would break deployments whose\\nadmin is a contract that cannot sign for itself. Deployers must read\\nback `get_admin` and `get_factory` right after deployment (the deploy\\nscript does) and redeploy if either differs from the intended value.\\n\\n# Factory validation\\n\\nThe candidate `factory` is probed with `try_get_pool_count` before\\nanything is written, mirroring `router::initialize`. Every op resolves\\nits pool through `FactoryClient::get_pool_tokens`, a hard cross-contract\\ncall, so a wrong address would make `execute_batch`, `simulate_batch`\\nand `validate_batch` trap with an untyped host error for every batch.\\nInstead the probe returns [`BatchRouterError::InvalidFactory`] and\\nleaves storage empty, so the router stays initializable.",
           "inputs": [
             {
               "doc": "",
@@ -6716,6 +6716,11 @@
               "doc": "The AMM pool has been permanently drained via emergency withdrawal.\\nSurfaced by simulation so pre-flight does not quote untradeable pools.",
               "name": "PoolDrained",
               "value": 16
+            },
+            {
+              "doc": "The address passed to `initialize` as `factory` does not implement the\\nfactory interface. Rejected at deploy time so a mistyped address cannot\\nturn every later batch into an untyped host trap.",
+              "name": "InvalidFactory",
+              "value": 17
             }
           ],
           "doc": "Errors returned by [`BatchRouter`] entry points.\\n\\nSee `docs/error-codes.md` for the full description of each variant.",
@@ -22565,7 +22570,7 @@
       },
       {
         "function_v0": {
-          "doc": "Update the reward rate for an active campaign. Governance only.\\n\\nThe accumulator is flushed to the current timestamp *before* the rate\\nchanges, so rewards already accrued at the old rate are locked in and\\nonly future seconds use the new rate.  This prevents retroactive reward\\nmanipulation via rate changes (part of bug #425).",
+          "doc": "Update the reward rate for an active campaign. Governance only.\\n\\nAn inactive campaign \\xe2\\x80\\x94 one wound down by `recover_leftover_funds` \\xe2\\x80\\x94 is\\nrejected with `CampaignInactive` before any state is touched. It can\\nnever pay out again (`claim_rewards` and `stake` reject it too), so\\nre-pricing it would rewrite `reward_rate` and append to the\\n`CampaignAccruedRewards` audit trail for a frozen campaign (#1330).\\n\\nThe accumulator is flushed to the current timestamp *before* the rate\\nchanges, so rewards already accrued at the old rate are locked in and\\nonly future seconds use the new rate.  This prevents retroactive reward\\nmanipulation via rate changes (part of bug #425).",
           "inputs": [
             {
               "doc": "",
@@ -29842,6 +29847,11 @@
               "doc": "`accept_admin` was called without a pending nomination.",
               "name": "NoPendingAdmin",
               "value": 12
+            },
+            {
+              "doc": "A hop pool rejected a swap or quote call (e.g. paused, empty reserves,\\nor another pool-level error).",
+              "name": "PoolCallFailed",
+              "value": 13
             }
           ],
           "doc": "Errors surfaced by the router.\\n\\nEvery caller-triggerable failure path returns one of these discriminants\\ninstead of trapping, so integrators can branch on the specific reason a\\nmulti-hop route failed. Discriminants 1 and 2 follow the workspace-wide\\nconvention (`AlreadyInitialized` / `NotInitialized`); see\\n`contracts/amm/src/lib.rs` `AmmError` for the reference enum.",

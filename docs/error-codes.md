@@ -186,6 +186,7 @@ Defined in [contracts/batch_router/src/lib.rs](../contracts/batch_router/src/lib
 | 14 | `NoPendingAdmin` | `accept_admin` called while no `propose_admin` nomination is pending. | Have the admin call `propose_admin` first. |
 | 15 | `Paused` | The router is paused by its admin; returned by `execute_batch`, `simulate_batch` and `validate_batch` alike. | Wait for the admin to call `unpause`. |
 | 16 | `PoolDrained` | The target AMM pool is in terminal drained state (or has empty reserves in simulation), so swap/liquidity simulation refuses to quote it. | Treat the pool as retired; route to a different pool. |
+| 17 | `InvalidFactory` | The `factory` address passed to `initialize` does not implement the factory interface (the `try_get_pool_count` probe failed). No storage is written. | Pass the address of a deployed, initialized factory contract; a rejected `initialize` leaves the router uninitialized, so it can be retried. |
 
 Current simulation note: `batch_router::simulate_batch` still does not replay AMM circuit-breaker and oracle-deviation checks, so those AMM guards can still diverge between simulation and execution.
 
@@ -424,7 +425,7 @@ Defined in [contracts/incentive_campaigns/src/lib.rs](../contracts/incentive_cam
 | 11 | `CampaignNotFound` | No campaign exists with the given id. | Use an id returned by `create_campaign` / `list_campaigns_paginated`. |
 | 12 | `CampaignNotEnded` | `recover_leftover_funds` was called before `end_time`. | Wait for the campaign to end before recovering unallocated funds. |
 | 13 | `NoLeftoverFunds` | `recover_leftover_funds` found nothing left to recover. | No action needed; funds fully distributed. |
-| 14 | `CampaignInactive` | `claim_rewards` or `recover_leftover_funds` was called on a campaign that has already been deactivated by leftover recovery. | No further claims or recoveries are possible on this campaign. |
+| 14 | `CampaignInactive` | `claim_rewards`, `set_campaign_rate` or `recover_leftover_funds` was called on a campaign that has already been deactivated by leftover recovery. | No further claims, rate changes or recoveries are possible on this campaign. |
 | 15 | `CampaignNotStarted` | `claim_rewards` was called before `start_time`. | Wait for the campaign start timestamp. |
 | 16 | `NoLpBalance` | The claiming provider holds 0 LP tokens. | Deposit liquidity to earn LP tokens before claiming. |
 | 17 | `NoLpSupply` | The LP token's total supply is 0. | Seed the pool with liquidity. |

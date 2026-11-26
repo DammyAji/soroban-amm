@@ -92,13 +92,11 @@ against for the compiler, so `.stellar-version` is the single source of truth
 that `Dockerfile` reads directly, while `scripts/check_stellar_version.mjs`
 enforces that `ci.yml`, `release.yml`, and `smoke-test.yml` pin the matching tag.
 
-The version is chosen deliberately rather than by taking the newest release.
-`27.1.0` is what this image can build: `--locked` compiles the CLI's own
-`Cargo.lock` with the toolchain above, and `25.1.0` locks `ethnum 1.5.2`,
-which Rust 1.98.1 rejects with E0512 (`cannot transmute between types of
-different sizes`). `27.1.0` locks `ethnum 1.5.3`, the version this workspace
-already builds with, so the container, the release optimizer and the smoke
-test all agree on a CLI that compiles here.
+Check a new version against the pinned Rust toolchain before upgrading:
+`--locked` builds the CLI's own dependency tree. Older releases such as
+`25.1.0` pin `ethnum 1.5.2`, which Rust 1.98.1 rejects with E0512
+(`cannot transmute between types of different sizes`). Also regenerate and
+check the ABI, and verify that the new CLI can optimize the release WASM.
 
 ---
 
