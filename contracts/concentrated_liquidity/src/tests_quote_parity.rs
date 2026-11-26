@@ -12,12 +12,7 @@ fn setup_pool(
     env: &Env,
     initial_tick: i32,
     tick_spacing: i32,
-) -> (
-    Address,
-    Address,
-    Address,
-    ConcentratedLiquidityClient<'_>,
-) {
+) -> (Address, Address, Address, ConcentratedLiquidityClient<'_>) {
     env.mock_all_auths();
     env.budget().reset_unlimited();
 
@@ -36,7 +31,14 @@ fn setup_pool(
 
     let contract_id = env.register_contract(None, ConcentratedLiquidity);
     let client = ConcentratedLiquidityClient::new(env, &contract_id);
-    client.initialize(&admin, &token_a, &token_b, &30, &initial_tick, &tick_spacing);
+    client.initialize(
+        &admin,
+        &token_a,
+        &token_b,
+        &30,
+        &initial_tick,
+        &tick_spacing,
+    );
 
     (provider, token_a, token_b, client)
 }
