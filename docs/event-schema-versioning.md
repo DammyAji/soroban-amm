@@ -239,7 +239,7 @@ a representative call sequence and asserts every pool event carries the leading
 | `voted` | `(proposal_id: u32, voter: Address, choice: VoteChoice, voting_power: i128)` |
 | `executed` | `(proposal_id: u32, kind: ProposalKind)` |
 | `vote_unlocked` | `(proposal_id: u32, locked: i128)` |
-| `vetoed` | `(proposal_id: u64, multisig: Address, now: u64, discussion_end: u64)` |
+| `vetoed` | `(proposal_id: u32, multisig: Address, now: u64, discussion_end: u64)` |
 
 ### Token (SEP-41 LP token) — `contracts/token/src/lib.rs`
 
