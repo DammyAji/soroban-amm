@@ -2602,7 +2602,7 @@ mod tests {
         let result = consumer.try_save_snapshot(&not_a_contract);
         assert_eq!(result, Err(Ok(TwalError::CrossContractCallFailed)));
         assert!(!consumer.is_tracked(&not_a_contract));
-        assert_eq!(consumer.snapshot_count(&not_a_contract), 0);
+        assert_eq!(consumer.get_snapshot_count(&not_a_contract), 0);
     }
 
     #[test]
@@ -2615,7 +2615,7 @@ mod tests {
         let result = consumer.try_save_cl_snapshot(&not_a_contract);
         assert_eq!(result, Err(Ok(TwalError::CrossContractCallFailed)));
         assert!(!consumer.is_tracked(&not_a_contract));
-        assert_eq!(consumer.snapshot_count(&not_a_contract), 0);
+        assert_eq!(consumer.get_snapshot_count(&not_a_contract), 0);
         assert_eq!(consumer.max_servable_window(&not_a_contract), 0);
     }
 
