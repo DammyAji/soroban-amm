@@ -69,6 +69,15 @@ pub enum SdkTokenError {
 /// | 19   | AlreadyExecuted      | Multisig emergency withdrawal was already executed   | No action — proposal already carried out          |
 /// | 20   | ProposalExpired      | Multisig emergency withdrawal proposal has expired   | Submit a new proposal                             |
 /// | 21   | NotInitialized       | Pool config read before `initialize` was called      | Call `initialize` first                           |
+/// | 22   | PoolDrained          | Pool entered terminal drained state                  | Deploy a new pool                                 |
+/// | 23   | QuorumNotMet         | Emergency withdrawal approvals are below quorum      | Collect enough signer approvals                   |
+/// | 24   | NoPendingProposal    | No active emergency withdrawal proposal exists       | Create a proposal first                           |
+/// | 25   | QuorumNotReached     | Collected approvals are below the multisig quorum    | Collect enough approvals                          |
+/// | 26   | InvalidQuorum        | Quorum or signer set is invalid                      | Reconfigure the multisig                          |
+/// | 27   | EmergencyDelayNotElapsed | Emergency delay has not elapsed                 | Wait until the delay expires                      |
+/// | 28   | InvalidRecipient     | Recipient is invalid or does not match announcement  | Use a valid announced recipient                   |
+/// | 29   | MultisigGuardActive  | Multisig configuration is locked by an active guard  | Complete or propose the required transition        |
+/// | 30   | InvalidEmergencyDelay | Emergency delay exceeds the maximum                 | Use the configured maximum or less                |
 #[contracterror]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SdkAmmError {

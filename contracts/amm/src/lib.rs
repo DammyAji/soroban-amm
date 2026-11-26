@@ -3772,6 +3772,9 @@ impl AmmPool {
 #[cfg(test)]
 pub(crate) mod tests;
 
+#[cfg(test)]
+mod guard_tests;
+
 // ── Authorization regression tests for admin entrypoints ─────────────────────
 
 #[cfg(test)]

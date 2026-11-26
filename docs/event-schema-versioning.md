@@ -259,6 +259,7 @@ a representative call sequence and asserts every pool event carries the leading
 | `min_reserve_set` | — | `(token_a: Address, token_b: Address, min_reserve_a: i128, min_reserve_b: i128, removed: bool)` |
 | `pool_kind_set` | — | `(pool: Address, kind: PoolKind)` |
 | `res_warn` | — | `(unhealthy: Vec<Address>)` |
+| `upgraded` | — | `(new_wasm_hash: BytesN<32>)` |
 
 ### POL Vesting — `contracts/pol_vesting/src/lib.rs`
 
@@ -886,6 +887,7 @@ count. Events marked unversioned carry their payload without the
 | `min_reserve_set` | 1 | `token_a`, `token_b`, `min_reserve_a`, `min_reserve_b`, `removed` | v1 |
 | `pool_kind_set` | 1 | `pool`, `kind` | v1 |
 | `res_warn` | 1 | `unhealthy` | v1 |
+| `upgraded` | 1 | `new_wasm_hash` | v1 |
 
 ### `router`
 
