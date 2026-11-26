@@ -1,6 +1,6 @@
 //! Shared types that mirror on-chain data structures.
 
-use soroban_sdk::{contracterror, contracttype, Address};
+use soroban_sdk::{contracterror, contracttype, Address, Vec};
 
 // ── Token error codes ───────────────────────────────────────────────────────────
 
@@ -142,6 +142,63 @@ pub struct SdkPoolInfo {
 /// Backward-compatible type alias so existing SDK consumers do not need to
 /// change their code.
 pub type PoolInfo = SdkPoolInfo;
+
+// ── Emergency, circuit-breaker and multisig views (#1390) ─────────────────────
+//
+// These mirror the `amm` contract's own types field for field, so they decode
+// the values its entry points return. They are `export = false`: every
+// contract in the workspace links this crate (for `emit_versioned_event!`), and
+// an exported spec entry would add these types to each contract's WASM and
+// ABI, and give the `amm` WASM two specs of the same name, which breaks
+// `contractimport!` of it (as in `amm-fuzz`).
+
+/// A pending single-admin emergency withdrawal, as `get_emergency_announcement`
+/// returns it.
+#[contracttype(export = false)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct EmergencyAnnouncement {
+    pub to: Address,
+    pub announced_at: u64,
+}
+
+/// Circuit-breaker configuration and state, as `get_circuit_breaker_config`
+/// returns it.
+#[contracttype(export = false)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct CircuitBreakerConfig {
+    pub threshold_bps: i128,
+    pub cooldown_secs: u64,
+    pub triggered_at: u64,
+    pub tripped: bool,
+}
+
+/// Multisig signer set and quorum, as `get_multisig_config` returns it.
+#[contracttype(export = false)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct MultisigConfig {
+    pub signers: Vec<Address>,
+    pub quorum: u32,
+}
+
+/// What a multisig proposal does once executed.
+#[contracttype(export = false)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum MultisigAction {
+    EmergencyWithdraw(Address),
+    SetMultisig(Vec<Address>, u32),
+}
+
+/// A multisig proposal, as `get_multisig_proposal` returns it.
+#[contracttype(export = false)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct MultisigProposal {
+    pub action: MultisigAction,
+    pub approvals: Vec<Address>,
+    pub expires_at: u64,
+    pub quorum_reached_at: u64,
+    pub epoch: u32,
+    pub executed: bool,
+}
 
 // ── Swap simulation ───────────────────────────────────────────────────────────
 

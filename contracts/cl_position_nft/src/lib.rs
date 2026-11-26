@@ -111,6 +111,16 @@ pub struct ClPositionNft;
 
 #[contractimpl]
 impl ClPositionNft {
+    /// Whether `address` is the all-zero Stellar account
+    /// (`GAAAA…WHF`), which no one can sign for.
+    fn is_zero_address(env: &Env, address: &Address) -> bool {
+        let zero_address = Address::from_string(&soroban_sdk::String::from_str(
+            env,
+            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
+        ));
+        address == &zero_address
+    }
+
     // ── TTL configuration ─────────────────────────────────────────────────────
     //
     // Persistent entries are evicted by the network once their TTL lapses
@@ -353,6 +363,9 @@ impl ClPositionNft {
         upper_tick: i32,
     ) -> Result<u64, NftError> {
         Self::require_pool(&env)?;
+        if Self::is_zero_address(&env, &to) {
+            return Err(NftError::InvalidReceiver);
+        }
 
         // #697: cap growth of the O(1) index itself (defence in depth on top
         // of the O(1) cost fix — see MAX_POSITIONS_PER_OWNER's doc comment).
@@ -664,11 +677,7 @@ impl ClPositionNft {
             return Err(NftError::Unauthorized);
         }
 
-        let zero_account = Address::from_string(&soroban_sdk::String::from_str(
-            &env,
-            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
-        ));
-        if approved == zero_account || approved == owner {
+        if Self::is_zero_address(&env, &approved) || approved == owner {
             return Err(NftError::InvalidAddress);
         }
 
@@ -727,6 +736,9 @@ impl ClPositionNft {
         token_id: u64,
     ) -> Result<(), NftError> {
         caller.require_auth();
+        if Self::is_zero_address(&env, &to) {
+            return Err(NftError::InvalidReceiver);
+        }
 
         let owner_key = DataKey::Owner(token_id);
         let owner: Address = env
@@ -969,11 +981,7 @@ impl ClPositionNft {
             .instance()
             .get(&DataKey::ClPool)
             .ok_or(NftError::Unauthorized)?;
-        let zero_account = Address::from_string(&soroban_sdk::String::from_str(
-            &env,
-            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
-        ));
-        if new_pool == current_pool || new_pool == zero_account {
+        if new_pool == current_pool || Self::is_zero_address(&env, &new_pool) {
             return Err(NftError::InvalidAddress);
         }
         env.storage().instance().set(&DataKey::ClPool, &new_pool);
@@ -1168,6 +1176,23 @@ mod tests {
 
         // Events are published; the harness captures them.
         let _ = env.events().all();
+    }
+
+    #[test]
+    fn mint_to_zero_address_is_rejected() {
+        let (env, client, _admin, pool, _user) = setup();
+        let zero = Address::from_string(&soroban_sdk::String::from_str(
+            &env,
+            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
+        ));
+
+        assert_eq!(
+            client
+                .try_mint(&zero, &pool, &-100, &100)
+                .unwrap_err()
+                .unwrap(),
+            NftError::InvalidReceiver
+        );
     }
 
     #[test]
@@ -1370,6 +1395,25 @@ mod tests {
         let b_tokens = client.tokens_of(&user_b);
         assert_eq!(b_tokens.len(), 1);
         assert_eq!(b_tokens.get(0).unwrap(), id);
+    }
+
+    #[test]
+    fn transfer_to_zero_address_is_rejected() {
+        let (env, client, _admin, pool, owner) = setup();
+        let zero = Address::from_string(&soroban_sdk::String::from_str(
+            &env,
+            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
+        ));
+        let id = client.mint(&owner, &pool, &-100, &100);
+
+        assert_eq!(
+            client
+                .try_transfer(&owner, &owner, &zero, &id)
+                .unwrap_err()
+                .unwrap(),
+            NftError::InvalidReceiver
+        );
+        assert_eq!(client.owner_of(&id), owner);
     }
 
     #[test]

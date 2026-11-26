@@ -1635,7 +1635,7 @@
             "fields": [
               "campaign_id",
               "provider",
-              "pending",
+              "amount",
               "dist_id"
             ]
           }
