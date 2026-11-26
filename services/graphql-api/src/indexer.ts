@@ -296,7 +296,9 @@ export class PoolIndexer {
         : `thresholdValue is required for metric "${config.metric}"`);
     }
     if (threshold < 0) throw new InvalidThresholdError("Threshold must be >= 0");
-    return config;
+    // AlertConfig.comparison is non-null in the GraphQL schema, so a config set
+    // without one (or with an explicit null) is normalized to the default here.
+    return { ...config, comparison };
   }
 
   /** Apply an already-validated config to the in-memory map. */

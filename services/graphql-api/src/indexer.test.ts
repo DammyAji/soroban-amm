@@ -8,9 +8,11 @@ import { describe, it } from "node:test";
 import {
   PoolIndexer,
   RETENTION_SECONDS,
+  InvalidComparisonError,
   InvalidMetricError,
   InvalidThresholdError,
   seedDemoData,
+  type AlertConfig,
   type PoolEvent,
 } from "./indexer.js";
 import { asSeconds, type Seconds } from "./time.js";
@@ -186,6 +188,28 @@ describe("health alerts", () => {
 
     const health = idx.getPoolHealth("p1");
     assert.equal(health!.alertsFired.length, 0);
+  });
+
+  it("normalizes a missing or null comparison to \"above\"", () => {
+    const idx = makeIndexer();
+    const stored = idx.setAlertConfig({ poolId: "p1", metric: "tvl", thresholdValue: 500 });
+    assert.equal(stored.comparison, "above");
+    idx.setAlertConfig({
+      poolId: "p1", metric: "volume24h", comparison: null, thresholdValue: 10,
+    } as unknown as AlertConfig);
+    const comparisons = idx.getAlertConfigs("p1").map((config) => config.comparison);
+    assert.deepEqual(comparisons, ["above", "above"]);
+  });
+
+  it("rejects a comparison other than \"above\" or \"below\"", () => {
+    const idx = makeIndexer();
+    assert.throws(
+      () => idx.setAlertConfig({
+        poolId: "p1", metric: "tvl", comparison: "sideways", thresholdValue: 500,
+      } as unknown as AlertConfig),
+      InvalidComparisonError,
+    );
+    assert.deepEqual(idx.getAlertConfigs(), []);
   });
 
   it("fires TVL alerts only in their configured comparison direction", () => {

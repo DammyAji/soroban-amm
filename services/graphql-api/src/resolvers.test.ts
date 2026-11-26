@@ -74,6 +74,29 @@ describe("BAD_USER_INPUT reaches clients", () => {
     );
   });
 
+  it("setAlertConfig rejects an invalid comparison", async () => {
+    assertBadUserInput(
+      await clientErrors(
+        "mutation { setAlertConfig(poolId: \"pool-1\", metric: \"tvl\", comparison: \"sideways\", thresholdValue: 1) { poolId } }",
+      ),
+      /Invalid alert comparison "sideways"/,
+    );
+  });
+
+  it("setAlertConfig defaults an explicit null comparison to above", async () => {
+    const response = await server.executeOperation({
+      query:
+        "mutation ($c: String) { setAlertConfig(poolId: \"pool-null\", metric: \"tvl\", comparison: $c, thresholdValue: 5) { poolId comparison } }",
+      variables: { c: null },
+    });
+    assert.equal(response.body.kind, "single");
+    if (response.body.kind !== "single") return;
+    assert.equal(response.body.singleResult.errors, undefined);
+    assert.deepEqual(JSON.parse(JSON.stringify(response.body.singleResult.data)), {
+      setAlertConfig: { poolId: "pool-null", comparison: "above" },
+    });
+  });
+
   it("valid input returns data and no errors", async () => {
     const response = await server.executeOperation({
       query:
@@ -169,6 +192,7 @@ describe("alert config mutations are durable-first (#1468)", () => {
     assert.deepEqual(config, {
       poolId: "pool-1",
       metric: "price_deviation",
+      comparison: "above",
       thresholdBps: 50,
       thresholdValue: undefined,
     });
