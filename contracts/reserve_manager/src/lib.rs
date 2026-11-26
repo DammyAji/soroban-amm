@@ -1168,6 +1168,7 @@ mod tests {
             "pause",
             soroban_sdk::Vec::<Val>::new(&s.env),
         );
+        assert!(ReserveManagerClient::new(&s.env, &s.rm_addr).is_paused());
     }
 
     #[test]
@@ -1181,6 +1182,7 @@ mod tests {
             "unpause",
             soroban_sdk::Vec::<Val>::new(&s.env),
         );
+        assert!(!ReserveManagerClient::new(&s.env, &s.rm_addr).is_paused());
     }
 
     #[test]
@@ -1886,20 +1888,6 @@ mod tests {
             ttl >= INSTANCE_TTL_BUMP_TO - 1,
             "instance TTL {ttl} should be bumped toward INSTANCE_TTL_BUMP_TO"
         );
-    }
-
-    #[test]
-    fn test_pause_and_unpause_requires_auth() {
-        let s = setup();
-        let rm = ReserveManagerClient::new(&s.env, &s.rm_addr);
-
-        // This will panic internally in the mock auth test environment because we didn't mock the auth for a random user,
-        // or it will fail authorization. Wait, if we use `try_pause`, we can't catch the require_auth() easily without a specific setup,
-        // but since `s.governance` has mock auth, calling it directly works. We can check that the admin can pause.
-        rm.pause();
-        assert!(rm.is_paused());
-        rm.unpause();
-        assert!(!rm.is_paused());
     }
 
     #[test]
