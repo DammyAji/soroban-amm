@@ -8682,7 +8682,7 @@
               "value": 11
             },
             {
-              "doc": "mint supplied a pool address other than the registered `cl_pool`.",
+              "doc": "`mint` supplied a pool address other than the registered `cl_pool`.",
               "name": "PoolMismatch",
               "value": 12
             }
@@ -10617,9 +10617,36 @@
               }
             },
             {
+              "tuple_v0": {
+                "doc": "`u128` presence bitmap of the non-empty `TickBitmap` words in one fixed\\n128-word page (page `p` covers words `-6932 + 128p ..= -6932 + 128p + 127`).",
+                "name": "TickBitmapIndexPage",
+                "type_": [
+                  "i32"
+                ]
+              }
+            },
+            {
               "void_v0": {
-                "doc": "",
+                "doc": "`u128` presence bitmap of the non-empty `TickBitmapIndexPage` entries.\\nAbsent means no page is populated.",
+                "name": "TickBitmapIndexRoot"
+              }
+            },
+            {
+              "void_v0": {
+                "doc": "Instance flag: the paged index is authoritative. Set by `initialize`, or\\nby `migrate_tick_bitmap_index` once a legacy pool has been migrated.",
+                "name": "TickBitmapIndexMigrated"
+              }
+            },
+            {
+              "void_v0": {
+                "doc": "Legacy sorted `Vec<i32>` of non-empty word positions, used only by pools\\nupgraded from the pre-paged index until `migrate_tick_bitmap_index`\\nfinishes and removes it.",
                 "name": "TickBitmapWords"
+              }
+            },
+            {
+              "void_v0": {
+                "doc": "Instance `i32`: legacy words below this position have been copied into\\nthe paged index by an in-progress `migrate_tick_bitmap_index`.",
+                "name": "TickBitmapIndexCursor"
               }
             },
             {
@@ -11472,7 +11499,7 @@
       },
       {
         "function_v0": {
-          "doc": "Admin: wire (or detach) the `cl_position_nft` contract used to tokenize\\npositions (issue #348).\\n\\nOnce set, opening a fresh position mints a receipt NFT to the provider\\nand records a `token_id \\xe2\\x86\\x94 position` index. The NFT may then be\\ntransferred; its current owner \\xe2\\x80\\x94 not the original provider \\xe2\\x80\\x94 controls\\nthe position through `burn_position_by_token_id`\\nand `collect_fees_by_token_id`.\\n\\nThe NFT contract must be initialized with this pool's address as its\\n`cl_pool`, otherwise mint/burn calls from the pool will be rejected.",
+          "doc": "Admin: wire (or detach) the `cl_position_nft` contract used to tokenize\\npositions (issue #348).\\n\\nOnce set, opening a fresh position mints a receipt NFT to the provider\\nand records a `token_id \\xe2\\x86\\x94 position` index. The NFT may then be\\ntransferred; its current owner \\xe2\\x80\\x94 not the original provider \\xe2\\x80\\x94 controls\\nthe position through `burn_position_by_token_id`\\nand `collect_fees_by_token_id`.\\n\\nThe NFT contract must be initialized with this pool's address as its\\n`cl_pool`, otherwise mint/burn calls from the pool will be rejected.\\nDetaching or replacing the contract is blocked while tokenized positions\\nremain open.",
           "inputs": [
             {
               "doc": "",
@@ -12176,6 +12203,31 @@
           "name": "get_liquidity_net_at_tick",
           "outputs": [
             "i128"
+          ]
+        }
+      },
+      {
+        "function_v0": {
+          "doc": "Copy a bounded batch of the legacy sorted `TickBitmapWords` index into\\nthe paged tick-bitmap index (#1311). Permissionless: it only rebuilds a\\nderived index from the pool's own state.\\n\\nPools initialized by this version never need it. A pool upgraded from\\nthe sorted-vector index keeps using (and maintaining) that vector for\\nswaps and mints until this has been called enough times to return 0.\\nEach call migrates at most `max_words` legacy words, in ascending order,\\nand writes each touched index page once, stopping early after 16 pages\\nso its ledger footprint stays small.\\nWords added or removed between batches are mirrored into the paged\\nindex when the batch cursor has already passed them. Once the last word\\nis copied the legacy vector is deleted and the paged index takes over.\\n\\nReturns the number of legacy words not yet migrated (0 when finished or\\nwhen there is nothing to migrate).",
+          "inputs": [
+            {
+              "doc": "",
+              "name": "max_words",
+              "type_": "u32"
+            }
+          ],
+          "name": "migrate_tick_bitmap_index",
+          "outputs": [
+            {
+              "result": {
+                "error_type": {
+                  "udt": {
+                    "name": "ClError"
+                  }
+                },
+                "ok_type": "u32"
+              }
+            }
           ]
         }
       },

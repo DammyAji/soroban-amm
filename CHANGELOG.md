@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `amm` adds negative-authorization regression tests for all seven fund-moving entrypoints, including FOT paths (#1295).
 - `concentrated_liquidity` blocks position-NFT detachment until all tokenized positions are burned (#1310).
-- `concentrated_liquidity` replaces the sorted tick-word index with a paged bitmap and one-time legacy migration, keeping mint index updates bounded as active words grow (#1311).
+- `concentrated_liquidity` replaces the sorted tick-word index with a paged bitmap, keeping mint index updates bounded as active words grow (#1311). Pools upgraded from the sorted index keep using it until the new permissionless `migrate_tick_bitmap_index(max_words)` has been called until it returns 0; each call migrates a bounded batch (at most 16 index pages).
 - `cl_position_nft::mint` rejects metadata naming any pool other than the registered `cl_pool`, with `NftError::PoolMismatch = 12` (#1316).
 - The TypeScript SDK's `FactoryClient.createPool` now returns named pool and optional governance addresses in its confirmed transaction result (#1382).
 - The health dashboard's 24-hour heatmap now reports swap volume in the pool's quote token for both trade directions (#1378).
