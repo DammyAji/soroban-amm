@@ -305,3 +305,49 @@ fn test_remove_tracked_pool_requires_auth() {
     assert_requires_auth(&f.env, &f.contract_addr, &f.keeper, &invoke);
     assert!(!f.client.is_tracked(&pool));
 }
+
+/// Seeds three snapshots for `pool`, all age-eligible once the ledger is moved
+/// past the default 7-day retention window.
+fn seed_prunable(f: &Fixture, pool: &Address) {
+    for ts in [10_000_u64, 10_060, 10_120] {
+        f.env.ledger().set_timestamp(ts);
+        f.client.save_snapshot(pool);
+    }
+    f.env
+        .ledger()
+        .set_timestamp(10_120 + TwapConsumer::DEFAULT_MAX_AGE_SECONDS + 1);
+}
+
+#[test]
+fn test_prune_snapshots_requires_auth() {
+    // #1333: pruning deletes TWAP history, so it is keeper-only like
+    // delete_snapshot.
+    let f = setup_fixture();
+    let pool = f.env.register_contract(None, AuthMockAmmPool);
+    seed_prunable(&f, &pool);
+
+    let invoke = MockAuthInvoke {
+        contract: &f.contract_addr,
+        fn_name: "prune_snapshots",
+        args: (pool.clone(), 2_u32).into_val(&f.env),
+        sub_invokes: &[],
+    };
+    assert_requires_auth(&f.env, &f.contract_addr, &f.keeper, &invoke);
+    assert_eq!(f.client.get_snapshot_count(&pool), 1);
+}
+
+#[test]
+fn test_prune_all_requires_auth() {
+    let f = setup_fixture();
+    let pool = f.env.register_contract(None, AuthMockAmmPool);
+    seed_prunable(&f, &pool);
+
+    let invoke = MockAuthInvoke {
+        contract: &f.contract_addr,
+        fn_name: "prune_all",
+        args: (2_u32,).into_val(&f.env),
+        sub_invokes: &[],
+    };
+    assert_requires_auth(&f.env, &f.contract_addr, &f.keeper, &invoke);
+    assert_eq!(f.client.get_snapshot_count(&pool), 1);
+}

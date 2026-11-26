@@ -108,8 +108,14 @@ Defined in [contracts/amm-sdk/src/types.rs](../contracts/amm-sdk/src/types.rs) a
 | 20 | `ProposalExpired` | Multisig emergency withdrawal proposal has expired. | Submit a new proposal. |
 | 21 | `NotInitialized` | Pool configuration was read before `initialize`. | Call `initialize` first. |
 | 22 | `PoolDrained` | Pool entered terminal `Drained` state after emergency withdrawal (#1095). | Deploy a new pool; drained pools are permanently retired. |
-| 23 | `QuorumNotMet` | Multisig emergency withdrawal approvals are below `MultisigQuorum` (#1095). | Collect enough signer approvals before executing. |
-| 24 | `NoPendingProposal` | `exec_multisig_emergency_wd` called with no active multisig proposal (#1095). | Call `propose_emergency_withdraw` first. |
+| 23 | `QuorumNotMet` | Legacy quorum code; no longer returned by the emergency path (see `QuorumNotReached`, #1095). | — |
+| 24 | `NoPendingProposal` | No emergency announcement or multisig proposal to act on: `emergency_withdraw` / `cancel_emergency_withdraw` without an announcement, or a multisig approve/exec with an unknown id or the wrong action (#1095). | Call `announce_emergency_withdraw` or `propose_emergency_withdraw` first and use the returned id. |
+| 25 | `QuorumNotReached` | `exec_multisig_emergency_wd` / `exec_multisig_set_multisig` called with fewer approvals than `MultisigQuorum`. | Collect more approvals with `approve_multisig_proposal`. |
+| 26 | `InvalidQuorum` | `set_multisig` / `propose_set_multisig` given `quorum > signers.len()` or duplicate signers. | Pass `quorum` in `0..=signers.len()` with unique signers. |
+| 27 | `EmergencyDelayNotElapsed` | Emergency withdrawal attempted before the emergency delay elapsed (since the announcement, or since multisig quorum). | Wait for the delay (24 h by default, at most 7 days). |
+| 28 | `InvalidRecipient` | Emergency recipient is the pool or its LP token, or differs from the announced recipient. | Pass the announced recipient, which may be neither the pool nor the LP token. |
+| 29 | `MultisigGuardActive` | `set_multisig` called while a multisig guard is active. | Change the signer set through `propose_set_multisig`. |
+| 30 | `InvalidEmergencyDelay` | `initialize_with_emergency_delay` given a delay above 7 days. | Pass at most `604800` seconds. |
 
 ---
 
@@ -327,7 +333,7 @@ Defined in [contracts/cl_position_nft/src/lib.rs](../contracts/cl_position_nft/s
 | 2 | `Unauthorized` | A caller other than the registered `cl_pool` called `mint`/`burn`, or an admin-only operation (`propose_admin`, `upgrade`, `set_cl_pool`, `set_ttl_params`, `migrate_ownership_index`) was called by a non-admin or before `initialize`. | Use the registered pool address (for mint/burn) or the current admin address. |
 | 3 | `TokenNotFound` | `owner_of`, `position_meta`, `burn`, `approve`, or `transfer` referenced a `token_id` that does not exist (never minted, or already burned). | Verify token ownership with `owner_of`; `total_supply` is the live token count, and `total_minted` is cumulative. |
 | 4 | `NotOwnerOrApproved` | `transfer` called by an address that is neither the token's owner, its approved address, nor an approved operator for the owner. | Use the owner, an approved address, or an approved operator. |
-| 5 | `InvalidReceiver` | Reserved; not currently returned by any function. | — |
+| 5 | `InvalidReceiver` | `mint` or `transfer` targeted the Stellar all-zero address. | Mint or transfer to a valid address that can authorize transactions. |
 | 6 | `InvalidTtlConfig` | `set_ttl_params` was called with `bump_to < min_ttl_threshold`. | Ensure `bump_to >= min_ttl_threshold`. |
 | 7 | `TooManyPositions` | `mint` (or the `to` side of `transfer`) would push an owner's O(1)-indexed holdings past `MAX_POSITIONS_PER_OWNER` (10,000). Defence in depth introduced in #697, on top of the O(1) index fix itself. | Transfer or burn existing positions for that owner first. |
 | 8 | `ReceiverRefused` | `transfer` targeted an address that opted out of incoming transfers and did not approve the sender as an operator. | Ask the recipient to opt in or approve the sender as an operator. |
@@ -504,6 +510,7 @@ Defined in [contracts/router/src/lib.rs](../contracts/router/src/lib.rs) as `Rou
 | 11 | `InvalidFactory` | `initialize` could not call the factory's `get_pool_count` interface. | Pass a deployed factory contract address. |
 | 12 | `NoPendingAdmin` | `accept_admin` was called without a pending nomination. | Call `propose_admin` first. |
 | 13 | `PoolCallFailed` | A hop pool rejected a swap or quote call (e.g. paused, empty reserves, or another pool-level error). | Inspect the hop pools along the path (pause state, reserves, liquidity) before retrying. |
+| 14 | `PathTooLong` | The path has more than `MAX_PATH_LEN` (8) tokens (#1355). Every swap, quote and path view rejects it; `is_path_routable` returns `false`. | Split the route into paths of at most eight tokens. |
 
 ---
 

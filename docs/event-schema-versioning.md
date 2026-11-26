@@ -235,11 +235,11 @@ a representative call sequence and asserts every pool event carries the leading
 |---|---|
 | `admin_nominated` | `(current_admin: Address, new_admin: Address)` |
 | `admin_changed` | `(new_admin: Address)` |
-| `proposed` | `(id: u64, proposer: Address, kind: ProposalKind, vote_end: u64, snapshot_ledger: u32)` |
-| `voted` | `(proposal_id: u64, voter: Address, choice: VoteChoice, voting_power: i128)` |
-| `executed` | `(proposal_id: u64, kind: ProposalKind)` |
-| `vote_unlocked` | `(proposal_id: u64, locked: i128)` |
-| `vetoed` | `(proposal_id: u64, multisig: Address, now: u64, discussion_end: u64)` |
+| `proposed` | `(id: u32, proposer: Address, kind: ProposalKind, vote_end: u64, snapshot_ledger: u32)` |
+| `voted` | `(proposal_id: u32, voter: Address, choice: VoteChoice, voting_power: i128)` |
+| `executed` | `(proposal_id: u32, kind: ProposalKind)` |
+| `vote_unlocked` | `(proposal_id: u32, locked: i128)` |
+| `vetoed` | `(proposal_id: u32, multisig: Address, now: u64, discussion_end: u64)` |
 
 ### Token (SEP-41 LP token) — `contracts/token/src/lib.rs`
 
@@ -259,6 +259,7 @@ a representative call sequence and asserts every pool event carries the leading
 | `min_reserve_set` | — | `(token_a: Address, token_b: Address, min_reserve_a: i128, min_reserve_b: i128, removed: bool)` |
 | `pool_kind_set` | — | `(pool: Address, kind: PoolKind)` |
 | `res_warn` | — | `(unhealthy: Vec<Address>)` |
+| `upgraded` | — | `(new_wasm_hash: BytesN<32>)` |
 
 ### POL Vesting — `contracts/pol_vesting/src/lib.rs`
 
@@ -269,7 +270,7 @@ a representative call sequence and asserts every pool event carries the leading
 | `treasury_proposed` | — | `(governance: Address, new_treasury: Address)` |
 | `treasury_transferred` | — | `(old_treasury: Address, new_treasury: Address)` |
 | `vesting_created` | — | `(beneficiary: Address, schedule_id: u32, total: i128, start_ledger: u32, cliff_ledger: u32, end_ledger: u32)` |
-| `released` | — | `(beneficiary: Address, schedule_id: u32, amount: i128)` |
+| `released` | — | `(beneficiary: Address, schedule_id: u32, releasable: i128)` |
 | `beneficiary_changed` | — | `(old_beneficiary: Address, old_schedule_id: u32, new_beneficiary: Address, new_schedule_id: u32)` |
 | `vesting_revoked` | — | `(beneficiary: Address, schedule_id: u32, to_beneficiary: i128, to_treasury: i128)` |
 
@@ -812,7 +813,7 @@ count. Events marked unversioned carry their payload without the
 | `campaign_created` | 1 | `id`, `pool`, `reward_token`, `start_time`, `end_time`, `reward_rate` | v1 |
 | `rate_updated` | 1 | `campaign_id`, `new_rate` | v1 |
 | `leftover_recovered` | 1 | `campaign_id`, `recipient`, `leftover` | v1 |
-| `reward_distributed` | 1 | `campaign_id`, `provider`, `pending`, `dist_id` | v1 |
+| `reward_distributed` | 1 | `campaign_id`, `provider`, `amount`, `dist_id` | v1 |
 | `staked` | 1 | `campaign_id`, `provider`, `amount`, `total_staked` | v1 |
 | `unstaked` | 1 | `campaign_id`, `provider`, `amount`, `total_staked` | v1 |
 | `paused` | 1 | `caller` | v1 |
@@ -886,6 +887,7 @@ count. Events marked unversioned carry their payload without the
 | `min_reserve_set` | 1 | `token_a`, `token_b`, `min_reserve_a`, `min_reserve_b`, `removed` | v1 |
 | `pool_kind_set` | 1 | `pool`, `kind` | v1 |
 | `res_warn` | 1 | `unhealthy` | v1 |
+| `upgraded` | 1 | `new_wasm_hash` | v1 |
 
 ### `router`
 
