@@ -6275,7 +6275,7 @@
       },
       {
         "function_v0": {
-          "doc": "Initialize the router with its admin and the factory that tracks all\\ndeployed pools.\\n\\n# Deployment window\\n\\n`initialize` is one-shot but deliberately does not call\\n`admin.require_auth()`: an attacker could authorize their own address,\\nso it would not stop a front-run, and it would break deployments whose\\nadmin is a contract that cannot sign for itself. Deployers must read\\nback `get_admin` and `get_factory` right after deployment (the deploy\\nscript does) and redeploy if either differs from the intended value.",
+          "doc": "Initialize the router with its admin and the factory that tracks all\\ndeployed pools.\\n\\n# Deployment window\\n\\n`initialize` is one-shot but deliberately does not call\\n`admin.require_auth()`: an attacker could authorize their own address,\\nso it would not stop a front-run, and it would break deployments whose\\nadmin is a contract that cannot sign for itself. Deployers must read\\nback `get_admin` and `get_factory` right after deployment (the deploy\\nscript does) and redeploy if either differs from the intended value.\\n\\n# Factory validation\\n\\nThe candidate `factory` is probed with `try_get_pool_count` before\\nanything is written, mirroring `router::initialize`. Every op resolves\\nits pool through `FactoryClient::get_pool_tokens`, a hard cross-contract\\ncall, so a wrong address would make `execute_batch`, `simulate_batch`\\nand `validate_batch` trap with an untyped host error for every batch.\\nInstead the probe returns [`BatchRouterError::InvalidFactory`] and\\nleaves storage empty, so the router stays initializable.",
           "inputs": [
             {
               "doc": "",
@@ -6716,6 +6716,11 @@
               "doc": "The AMM pool has been permanently drained via emergency withdrawal.\\nSurfaced by simulation so pre-flight does not quote untradeable pools.",
               "name": "PoolDrained",
               "value": 16
+            },
+            {
+              "doc": "The address passed to `initialize` as `factory` does not implement the\\nfactory interface. Rejected at deploy time so a mistyped address cannot\\nturn every later batch into an untyped host trap.",
+              "name": "InvalidFactory",
+              "value": 17
             }
           ],
           "doc": "Errors returned by [`BatchRouter`] entry points.\\n\\nSee `docs/error-codes.md` for the full description of each variant.",
@@ -22565,7 +22570,7 @@
       },
       {
         "function_v0": {
-          "doc": "Update the reward rate for an active campaign. Governance only.\\n\\nThe accumulator is flushed to the current timestamp *before* the rate\\nchanges, so rewards already accrued at the old rate are locked in and\\nonly future seconds use the new rate.  This prevents retroactive reward\\nmanipulation via rate changes (part of bug #425).",
+          "doc": "Update the reward rate for an active campaign. Governance only.\\n\\nAn inactive campaign \\xe2\\x80\\x94 one wound down by `recover_leftover_funds` \\xe2\\x80\\x94 is\\nrejected with `CampaignInactive` before any state is touched. It can\\nnever pay out again (`claim_rewards` and `stake` reject it too), so\\nre-pricing it would rewrite `reward_rate` and append to the\\n`CampaignAccruedRewards` audit trail for a frozen campaign (#1330).\\n\\nThe accumulator is flushed to the current timestamp *before* the rate\\nchanges, so rewards already accrued at the old rate are locked in and\\nonly future seconds use the new rate.  This prevents retroactive reward\\nmanipulation via rate changes (part of bug #425).",
           "inputs": [
             {
               "doc": "",
