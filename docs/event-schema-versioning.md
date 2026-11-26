@@ -701,6 +701,8 @@ count. Events marked unversioned carry their payload without the
 
 | Event | Topics | Payload fields | Envelope |
 |---|---|---|---|
+| `accept_transfers_set` | 2 | `accepts` | v1 |
+| `ttl_params_set` | 1 | `min_ttl_threshold`, `bump_to` | v1 |
 | `initialized` | 1 | `admin`, `cl_pool` | v1 |
 | `admin_nominated` | 1 | `current_admin`, `new_admin` | v1 |
 | `admin_transferred` | 1 | `new_admin` | v1 |
