@@ -851,10 +851,18 @@ impl ClPositionNft {
     /// Set whether this address accepts incoming NFT transfers.
     pub fn set_accept_transfers(env: Env, owner: Address, accepts: bool) {
         owner.require_auth();
-        let key = DataKey::AcceptTransfers(owner);
+        let key = DataKey::AcceptTransfers(owner.clone());
         env.storage().persistent().set(&key, &accepts);
         Self::bump_persistent(&env, &key);
         Self::bump_instance(&env);
+        emit_versioned_event!(
+            env,
+            (
+                soroban_sdk::Symbol::new(&env, "accept_transfers_set"),
+                owner
+            ),
+            (accepts,)
+        );
     }
 
     /// Nominate a successor admin. The nominee completes the transfer by calling `accept_admin`.
@@ -997,6 +1005,11 @@ impl ClPositionNft {
             .set(&DataKey::TtlMinThreshold, &min_ttl_threshold);
         env.storage().instance().set(&DataKey::TtlBumpTo, &bump_to);
         Self::bump_instance(&env);
+        emit_versioned_event!(
+            env,
+            (soroban_sdk::Symbol::new(&env, "ttl_params_set"),),
+            (min_ttl_threshold, bump_to)
+        );
         Ok(())
     }
 }
@@ -2488,6 +2501,28 @@ mod tests {
             last_versioned_event(&env, &client.address, "transfer");
         assert_eq!(version, soroban_amm_sdk::EVENT_SCHEMA_VERSION);
         assert_eq!(token_id, id);
+    }
+
+    #[test]
+    fn set_accept_transfers_emits_versioned_event() {
+        let (env, client, _admin, _pool, user) = setup();
+        client.set_accept_transfers(&user, &false);
+
+        let (version, (accepts,)): (u32, (bool,)) =
+            last_versioned_event(&env, &client.address, "accept_transfers_set");
+        assert_eq!(version, soroban_amm_sdk::EVENT_SCHEMA_VERSION);
+        assert!(!accepts);
+    }
+
+    #[test]
+    fn set_ttl_params_emits_versioned_event() {
+        let (env, client, _admin, _pool, _user) = setup();
+        client.set_ttl_params(&1_000, &10_000);
+
+        let (version, (min_ttl, bump_to)): (u32, (u32, u32)) =
+            last_versioned_event(&env, &client.address, "ttl_params_set");
+        assert_eq!(version, soroban_amm_sdk::EVENT_SCHEMA_VERSION);
+        assert_eq!((min_ttl, bump_to), (1_000, 10_000));
     }
 
     #[test]
