@@ -160,30 +160,6 @@ fn test_delegate_cannot_revote_after_delegator_was_aggregated() {
 }
 
 #[test]
-fn test_vote_does_not_double_count_a_delegator_who_voted_before_delegating() {
-    let suite = setup();
-    let delegator = Address::generate(&suite.env);
-    let delegatee = Address::generate(&suite.env);
-    let proposer = Address::generate(&suite.env);
-    mint_lp(&suite, &delegator, 300);
-    mint_lp(&suite, &delegatee, 300);
-    mint_lp(&suite, &proposer, 400);
-    let id = proposal(&suite, &proposer);
-    suite.gov().vote(&delegator, &id, &Vote::For);
-    suite.gov().delegate(&delegator, &delegatee);
-
-    suite.gov().vote(&delegatee, &id, &Vote::Against);
-
-    let after = suite.gov().get_proposal(&id);
-    assert_eq!(after.votes_for, 300);
-    assert_eq!(after.votes_against, 300);
-    assert_eq!(
-        LpTokenClient::new(&suite.env, &suite.lp_addr).locked_balance(&delegator),
-        300
-    );
-}
-
-#[test]
 fn test_vote_before_vote_start_returns_exact_error() {
     let suite = setup();
     let voter = Address::generate(&suite.env);
@@ -192,6 +168,10 @@ fn test_vote_before_vote_start_returns_exact_error() {
     mint_lp(&suite, &other, 400);
     let id = proposal(&suite, &voter);
     let before = suite.gov().get_proposal(&id);
+    // Defensive-branch test: `propose` sets `vote_start` to the current
+    // ledger time and ledger time never decreases, so normal execution cannot
+    // vote before `vote_start`. Rewinding the clock is the only way to reach
+    // the guard, which still has to hold if a voting delay is ever added.
     suite.env.ledger().set_timestamp(before.vote_start - 1);
 
     assert_eq!(
@@ -211,6 +191,10 @@ fn test_vote_on_executed_proposal_returns_already_executed() {
     let (id, voter, _) = passed_proposal(&suite);
     let before = suite.gov().get_proposal(&id);
     execute_at(&suite, id);
+    // Defensive-branch test: `execute` requires `now > vote_end` and `vote`
+    // rejects `now > vote_end` first, so an executed proposal is never open
+    // for voting in normal execution. Rewinding the clock into the voting
+    // period is the only way to reach the `AlreadyExecuted` guard in `vote`.
     suite.env.ledger().set_timestamp(before.vote_end);
     let executed = suite.gov().get_proposal(&id);
 
@@ -231,6 +215,9 @@ fn test_vote_on_vetoed_proposal_returns_proposal_vetoed() {
     let before = suite.gov().get_proposal(&id);
     suite.env.ledger().set_timestamp(before.vote_end + 1);
     suite.gov().veto(&id);
+    // Defensive-branch test: `veto` requires `now > vote_end`, so a vetoed
+    // proposal is never open for voting in normal execution. Rewinding the
+    // clock is the only way to reach the `ProposalVetoed` guard in `vote`.
     suite.env.ledger().set_timestamp(before.vote_end);
     let vetoed = suite.gov().get_proposal(&id);
 
@@ -314,9 +301,9 @@ fn test_execute_passes_with_one_more_vote_for_than_against() {
 fn test_cancel_executed_proposal_returns_already_executed() {
     let suite = setup();
     let (id, proposer, _) = passed_proposal(&suite);
-    let before = suite.gov().get_proposal(&id);
     execute_at(&suite, id);
-    suite.env.ledger().set_timestamp(before.vote_end);
+    // No clock rewind: `cancel_proposal` checks `executed` before the
+    // voting-period bound, so the guard is reached at the execution time.
     let executed = suite.gov().get_proposal(&id);
 
     assert_eq!(
@@ -379,8 +366,8 @@ fn test_veto_executed_proposal_returns_already_executed() {
     let multisig = Address::generate(&suite.env);
     suite.gov().set_veto_multisig(&multisig);
     execute_at(&suite, id);
+    // No clock rewind: `veto` checks `executed` before the veto window.
     let executed = suite.gov().get_proposal(&id);
-    suite.env.ledger().set_timestamp(executed.vote_end + 1);
 
     assert_eq!(
         suite.gov().try_veto(&id),

@@ -2884,6 +2884,11 @@ mod tests {
             300 + 300,
             "B's power must not be counted twice"
         );
+        assert_eq!(
+            LpTokenClient::new(&s.env, &s.lp_addr).locked_balance(&b),
+            300,
+            "B's balance must stay locked exactly once"
+        );
     }
 
     #[test]
