@@ -98,7 +98,10 @@ fn factory_deployed_cl_pool_supports_mint_and_swap() {
     StellarAssetClient::new(&protocol.env, &token_0).mint(&trader, &1_000_i128);
 
     let amount_out = cl_client.swap(&trader, &true, &1_000_i128, &0_u128, &1_i128, &DEADLINE);
-    assert!(amount_out > 0, "swap should return a positive output amount");
+    assert!(
+        amount_out > 0,
+        "swap should return a positive output amount"
+    );
     assert_eq!(
         TokenClient::new(&protocol.env, &token_1).balance(&trader),
         amount_out,

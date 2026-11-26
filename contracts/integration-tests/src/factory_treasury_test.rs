@@ -33,13 +33,7 @@ fn treasury_sweep_forwards_accrued_swap_fees_to_treasury() {
     let provider = Address::generate(&protocol.env);
     StellarAssetClient::new(&protocol.env, &protocol.token_a).mint(&provider, &1_000_000_i128);
     StellarAssetClient::new(&protocol.env, &protocol.token_b).mint(&provider, &1_000_000_i128);
-    amm_client.add_liquidity(
-        &provider,
-        &500_000_i128,
-        &500_000_i128,
-        &1_i128,
-        &DEADLINE,
-    );
+    amm_client.add_liquidity(&provider, &500_000_i128, &500_000_i128, &1_i128, &DEADLINE);
 
     // Execute a swap so protocol fees accrue in token_a.
     let trader = Address::generate(&protocol.env);
@@ -111,32 +105,14 @@ fn treasury_sweep_collects_fees_for_both_tokens_after_bidirectional_swaps() {
     let provider = Address::generate(&protocol.env);
     StellarAssetClient::new(&protocol.env, &protocol.token_a).mint(&provider, &1_000_000_i128);
     StellarAssetClient::new(&protocol.env, &protocol.token_b).mint(&provider, &1_000_000_i128);
-    amm_client.add_liquidity(
-        &provider,
-        &500_000_i128,
-        &500_000_i128,
-        &1_i128,
-        &DEADLINE,
-    );
+    amm_client.add_liquidity(&provider, &500_000_i128, &500_000_i128, &1_i128, &DEADLINE);
 
     // Swap in both directions so fees accrue in both tokens.
     let trader = Address::generate(&protocol.env);
     StellarAssetClient::new(&protocol.env, &protocol.token_a).mint(&trader, &50_000_i128);
     StellarAssetClient::new(&protocol.env, &protocol.token_b).mint(&trader, &50_000_i128);
-    amm_client.swap(
-        &trader,
-        &protocol.token_a,
-        &50_000_i128,
-        &1_i128,
-        &DEADLINE,
-    );
-    amm_client.swap(
-        &trader,
-        &protocol.token_b,
-        &50_000_i128,
-        &1_i128,
-        &DEADLINE,
-    );
+    amm_client.swap(&trader, &protocol.token_a, &50_000_i128, &1_i128, &DEADLINE);
+    amm_client.swap(&trader, &protocol.token_b, &50_000_i128, &1_i128, &DEADLINE);
 
     let (accrued_a, accrued_b) = amm_client.get_accrued_fees();
     assert!(accrued_a > 0, "token_a protocol fees should be positive");
@@ -147,11 +123,10 @@ fn treasury_sweep_collects_fees_for_both_tokens_after_bidirectional_swaps() {
     let treasury_a_before = token_a_client.balance(&treasury);
     let treasury_b_before = token_b_client.balance(&treasury);
 
+    // One sweep forwards both tokens. The return value totals only the
+    // requested token, and a second sweep finds nothing left to withdraw.
     let swept_a = factory_client.sweep_fees(&protocol.token_a);
-    let swept_b = factory_client.sweep_fees(&protocol.token_b);
-
     assert_eq!(swept_a, accrued_a);
-    assert_eq!(swept_b, accrued_b);
     assert_eq!(
         token_a_client.balance(&treasury) - treasury_a_before,
         accrued_a
@@ -161,6 +136,7 @@ fn treasury_sweep_collects_fees_for_both_tokens_after_bidirectional_swaps() {
         accrued_b
     );
     assert_eq!(amm_client.get_accrued_fees(), (0_i128, 0_i128));
+    assert_eq!(factory_client.sweep_fees(&protocol.token_b), 0);
 }
 
 #[test]
