@@ -284,7 +284,8 @@ export class PoolIndexer {
     };
   }
 
-  setAlertConfig(config: AlertConfig): AlertConfig {
+  /** Validate an alert config without mutating the in-memory map. */
+  validateAlertConfig(config: AlertConfig): AlertConfig {
     if (!isValidMetric(config.metric)) throw new InvalidMetricError(config.metric);
     const comparison = config.comparison ?? "above";
     if (!isValidComparison(comparison)) throw new InvalidComparisonError(comparison);
@@ -295,9 +296,17 @@ export class PoolIndexer {
         : `thresholdValue is required for metric "${config.metric}"`);
     }
     if (threshold < 0) throw new InvalidThresholdError("Threshold must be >= 0");
-    const normalized = { ...config, comparison };
-    this.alertConfigs.set(`${config.poolId}:${config.metric}`, normalized);
-    return normalized;
+    return config;
+  }
+
+  /** Apply an already-validated config to the in-memory map. */
+  applyAlertConfig(config: AlertConfig): AlertConfig {
+    this.alertConfigs.set(`${config.poolId}:${config.metric}`, config);
+    return config;
+  }
+
+  setAlertConfig(config: AlertConfig): AlertConfig {
+    return this.applyAlertConfig(this.validateAlertConfig(config));
   }
 
   removeAlertConfig(poolId: string, metric: string): boolean {
