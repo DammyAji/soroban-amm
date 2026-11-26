@@ -1,5 +1,7 @@
 extern crate std;
 
+use std::{borrow::ToOwned, string::String, vec::Vec};
+
 use super::*;
 use crate::tests::{setup_pool, TestSetup};
 use soroban_sdk::{
@@ -503,23 +505,27 @@ fn test_fee_on_transfer_add_liquidity_shares_use_received_amount() {
     let amm = AmmPoolClient::new(&setup.env, &setup.amm_addr);
     let amount = 1_000_000_i128;
     let received = amount - amount / 100;
+    // Token B is deposited in surplus so the skimmed token A side is the
+    // binding constraint on the minted shares; otherwise the 1% skim on the
+    // seed deposit can make both sides tie and hide the difference.
+    let amount_b = 2 * amount;
     OnePercentSkimTokenClient::new(&setup.env, &setup.skim_addr).mint(&provider, &amount);
-    StellarAssetClient::new(&setup.env, &setup.other_addr).mint(&provider, &amount);
+    StellarAssetClient::new(&setup.env, &setup.other_addr).mint(&provider, &amount_b);
     let info = amm.get_info();
     let expected = (received * info.total_shares / info.reserve_a)
-        .min(amount * info.total_shares / info.reserve_b);
+        .min(amount_b * info.total_shares / info.reserve_b);
     let nominal_shares = (amount * info.total_shares / info.reserve_a)
-        .min(amount * info.total_shares / info.reserve_b);
+        .min(amount_b * info.total_shares / info.reserve_b);
     assert!(expected < nominal_shares);
 
     assert_eq!(
         amm.try_add_liquidity_fot(
             &provider,
             &amount,
-            &amount,
+            &amount_b,
             &received,
-            &amount,
-            &(nominal_shares + 1),
+            &amount_b,
+            &(expected + 1),
             &u64::MAX,
         ),
         Err(Ok(AmmError::SlippageExceeded))
@@ -528,9 +534,9 @@ fn test_fee_on_transfer_add_liquidity_shares_use_received_amount() {
         amm.try_add_liquidity_fot(
             &provider,
             &amount,
-            &amount,
+            &amount_b,
             &received,
-            &amount,
+            &amount_b,
             &expected,
             &u64::MAX,
         ),
@@ -548,7 +554,7 @@ fn test_deadline_table_covers_public_entrypoints() {
         .split("// ── Tests")
         .next()
         .unwrap();
-    let mut discovered: std::vec::Vec<String> = std::vec::Vec::new();
+    let mut discovered: Vec<String> = Vec::new();
     let mut current: Option<(String, String)> = None;
     for line in implementation.lines() {
         if current.is_none() {
@@ -559,9 +565,11 @@ fn test_deadline_table_covers_public_entrypoints() {
         } else if let Some((_, signature)) = current.as_mut() {
             signature.push_str(line);
         }
+        // A signature ends at the body's opening brace, with or without a
+        // return type.
         if current
             .as_ref()
-            .map_or(false, |(_, signature)| signature.contains(") ->"))
+            .is_some_and(|(_, signature)| signature.contains('{'))
         {
             let (name, signature) = current.take().unwrap();
             if signature.contains("deadline: u64") {
